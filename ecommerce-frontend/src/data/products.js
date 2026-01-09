@@ -1,0 +1,38 @@
+export const products = [
+  {
+    id: 1,
+    name: "iPhone 13 Pro",
+    price: 520000,
+    oldPrice: 650000,
+    category: "electronics",
+    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee",
+    promo: true,
+  },
+  {
+    id: 2,
+    name: "Samsung Galaxy S22",
+    price: 420000,
+    oldPrice: 500000,
+    category: "electronics",
+    image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf",
+    promo: true,
+  },
+  {
+    id: 3,
+    name: "Nike Air Force 1",
+    price: 75000,
+    oldPrice: 95000,
+    category: "chaussures",
+    image: "https://images.unsplash.com/photo-1606813902914-3c5c4e9c0d92",
+    promo: true,
+  },
+  {
+    id: 4,
+    name: "MacBook Pro M1",
+    price: 950000,
+    oldPrice: null,
+    category: "electronics",
+    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
+    promo: false,
+  },
+];
