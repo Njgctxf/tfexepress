@@ -53,7 +53,7 @@ export default function Categories() {
 
     try {
       await deleteCategory(id);
-      setCategories((prev) => prev.filter((c) => c._id !== id));
+      setCategories((prev) => prev.filter((c) => (c._id || c.id) !== id));
     } catch (err) {
       alert(err.message);
     }
@@ -112,13 +112,13 @@ export default function Categories() {
         ) : (
 categories.map((cat) => (
   <div
-    key={cat._id}
+    key={cat._id || cat.id}
     className="flex items-center justify-between px-4 py-3"
   >
     <span className="text-sm font-medium">{cat.name}</span>
 
     <button
-      onClick={() => handleDeleteCategory(cat._id)}
+      onClick={() => handleDeleteCategory(cat._id || cat.id)}
       className="text-gray-400 hover:text-red-600"
     >
       <Trash2 size={18} />

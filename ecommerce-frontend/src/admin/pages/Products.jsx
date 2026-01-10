@@ -19,8 +19,17 @@ export default function Products() {
 
   useEffect(() => {
     getProducts()
-      .then(setProducts)
-      .catch(console.error)
+      .then((res) => {
+        if (res.success) {
+          setProducts(res.data || []);
+        } else {
+          setProducts([]);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        setProducts([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 

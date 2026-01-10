@@ -1,4 +1,15 @@
+import { useEffect, useState } from "react";
+import { getCategories } from "../../services/api";
+
 export default function CategorySelect({ value, onChange }) {
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    getCategories()
+      .then(setCategories)
+      .catch(console.error);
+  }, []);
+
   return (
     <select
       value={value}
@@ -7,10 +18,11 @@ export default function CategorySelect({ value, onChange }) {
       required
     >
       <option value="">Sélectionner une catégorie</option>
-      <option value="electronique">Électronique</option>
-      <option value="vetements">Vêtements</option>
-      <option value="accessoires">Accessoires</option>
-      <option value="maison">Maison</option>
+      {categories.map((cat) => (
+        <option key={cat._id || cat.id} value={cat._id || cat.id}>
+          {cat.name}
+        </option>
+      ))}
     </select>
   );
 }

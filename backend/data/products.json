@@ -1,0 +1,67 @@
+[
+  {
+    "id": 1,
+    "name": "iPhone 17 Pro",
+    "price": 1299,
+    "originalPrice": 1499,
+    "rating": 5,
+    "category": "electronics",
+    "brand": "Apple",
+    "images": [
+      "https://images.unsplash.com/photo-1695048133142-1a2043614d8c"
+    ],
+    "stock": 45,
+    "isFeatured": true
+  },
+  {
+    "id": 2,
+    "name": "Galaxy S25 Ultra",
+    "price": 1199,
+    "rating": 4,
+    "category": "electronics",
+    "brand": "Samsung",
+    "images": [
+      "https://images.unsplash.com/photo-1606813902914-3c5c4e9c0d92"
+    ],
+    "stock": 30,
+    "isFeatured": true
+  },
+  {
+    "id": 3,
+    "name": "MacBook Pro M4",
+    "price": 2499,
+    "rating": 5,
+    "category": "electronics",
+    "brand": "Apple",
+    "images": [
+      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8"
+    ],
+    "stock": 15
+  },
+  {
+    "id": 10,
+    "name": "PlayStation 5",
+    "price": 499,
+    "rating": 5,
+    "category": "games",
+    "brand": "Sony",
+    "images": [
+      "https://images.unsplash.com/photo-1606813907291-d86efa9b94db"
+    ],
+    "stock": 25,
+    "isFeatured": true
+  },
+  {
+    "id": 1768017554634,
+    "name": "iphone",
+    "price": "3",
+    "stock": "2",
+    "category": "1768017503489",
+    "description": "nn",
+    "images": [
+      "/uploads/1768017554535-generated-image (2) copie.png"
+    ],
+    "sold": 0,
+    "createdAt": "2026-01-10T03:59:14.634Z"
+  }
+]

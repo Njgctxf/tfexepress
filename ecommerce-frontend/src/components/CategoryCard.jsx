@@ -37,7 +37,7 @@ const Categories = () => {
             className="bg-gray-800 rounded-2xl p-6 text-white"
           >
             <img
-              src={`http://localhost:5000${item.image}`}
+              src={item.image.startsWith('http') ? item.image : `http://localhost:5000${item.image}`}
               alt={item.category.name}
               className="h-40 w-full object-cover rounded-xl"
             />

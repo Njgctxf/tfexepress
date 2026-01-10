@@ -1,5 +1,4 @@
-// src/admin/pages/AdminDashboard.jsx
-
+import { useEffect, useState } from "react";
 import {
   Package,
   ShoppingCart,
@@ -10,35 +9,57 @@ import {
 
 import SalesChart from "../components/SalesChart";
 import OrdersTable from "../components/OrdersTable";
-
-const stats = [
-  {
-    title: "Produits",
-    value: 128,
-    icon: Package,
-    color: "bg-blue-100 text-blue-600",
-  },
-  {
-    title: "Commandes",
-    value: 54,
-    icon: ShoppingCart,
-    color: "bg-green-100 text-green-600",
-  },
-  {
-    title: "Utilisateurs",
-    value: 312,
-    icon: Users,
-    color: "bg-purple-100 text-purple-600",
-  },
-  {
-    title: "Revenus",
-    value: "1 250 000 FCFA",
-    icon: DollarSign,
-    color: "bg-yellow-100 text-yellow-600",
-  },
-];
+import { getDashboardStats } from "../../services/api";
 
 export default function AdminDashboard() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await getDashboardStats();
+        if (res.success) {
+          setData(res);
+        }
+      } catch (err) {
+        console.error("Erreur stats:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Chargement des données...</div>;
+
+  const stats = [
+    {
+      title: "Produits",
+      value: data?.stats?.products || 0,
+      icon: Package,
+      color: "bg-blue-100 text-blue-600",
+    },
+    {
+      title: "Commandes",
+      value: data?.stats?.orders || 0,
+      icon: ShoppingCart,
+      color: "bg-green-100 text-green-600",
+    },
+    {
+      title: "Utilisateurs",
+      value: data?.stats?.users || 0,
+      icon: Users,
+      color: "bg-purple-100 text-purple-600",
+    },
+    {
+      title: "Revenus",
+      value: `${(data?.stats?.revenue || 0).toLocaleString()} FCFA`,
+      icon: DollarSign,
+      color: "bg-yellow-100 text-yellow-600",
+    },
+  ];
+
   return (
     <div className="space-y-8">
       {/* 🧭 HEADER */}
@@ -92,12 +113,12 @@ export default function AdminDashboard() {
           <h3 className="text-base font-semibold mb-4">
             Évolution des ventes
           </h3>
-          <SalesChart />
+          <SalesChart data={data?.salesData} />
         </div>
 
         {/* COMMANDES RÉCENTES */}
         <div className="xl:col-span-1">
-          <OrdersTable />
+          <OrdersTable orders={data?.recentOrders} />
         </div>
       </div>
     </div>

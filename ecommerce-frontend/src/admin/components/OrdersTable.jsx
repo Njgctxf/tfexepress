@@ -1,36 +1,12 @@
 import { Link } from "react-router-dom";
 
-const orders = [
-  {
-    id: "#TF-1021",
-    client: "Jean Kouassi",
-    total: "45 000 FCFA",
-    status: "Payé",
-    date: "05 Jan 2026",
-  },
-  {
-    id: "#TF-1022",
-    client: "Aïcha Traoré",
-    total: "28 500 FCFA",
-    status: "En attente",
-    date: "05 Jan 2026",
-  },
-  {
-    id: "#TF-1023",
-    client: "Marc Yao",
-    total: "120 000 FCFA",
-    status: "Annulé",
-    date: "04 Jan 2026",
-  },
-];
-
 const statusStyle = {
   Payé: "bg-green-100 text-green-700",
   "En attente": "bg-yellow-100 text-yellow-700",
   Annulé: "bg-red-100 text-red-700",
 };
 
-export default function OrdersTable() {
+export default function OrdersTable({ orders = [] }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
       <h3 className="text-base sm:text-lg font-semibold mb-4">

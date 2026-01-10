@@ -1,0 +1,27 @@
+[
+  {
+    "id": "electronics",
+    "name": "Électronique"
+  },
+  {
+    "id": "chaussures",
+    "name": "Chaussures"
+  },
+  {
+    "id": "beaute",
+    "name": "Beauté"
+  },
+  {
+    "id": "games",
+    "name": "Jeux"
+  },
+  {
+    "id": "vetements",
+    "name": "Vêtements"
+  },
+  {
+    "_id": "1768017503489",
+    "name": "bonbon",
+    "slug": "bonbon"
+  }
+]

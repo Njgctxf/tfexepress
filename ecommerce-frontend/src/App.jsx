@@ -9,9 +9,9 @@ import FavoritesPage from "./pages/FavoritesPage";
 import SearchPage from "./pages/SearchPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import UserDashboard from "./pages/UserDashboard";
 import AdminRouter from "./admin/AdminRouter";
 import ProtectedRoute from "./routes/ProtectedRoute";
-import AddProduct from  "./admin/pages/AddProduct";
 
 function App() {
   return (
@@ -46,9 +46,17 @@ function App() {
         }
       />
 
-      {/* 🛠 ADMIN (UNE SEULE FOIS) */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <UserDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 🛠 ADMIN */}
       <Route path="/admin/*" element={<AdminRouter />} />
-      <Route path="/admin/products/add" element={<AddProduct />} />
     </Routes>
   );
 }

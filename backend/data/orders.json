@@ -1,0 +1,32 @@
+[
+  {
+    "id": "ord_1",
+    "user_email": "test@example.com",
+    "total": 129000,
+    "status": "Livré",
+    "date": "2023-10-01",
+    "items": [
+      { "name": "iPhone 15", "qty": 1, "price": 129000 }
+    ]
+  },
+  {
+    "id": "ord_2",
+    "user_email": "test@example.com",
+    "total": 45000,
+    "status": "En cours",
+    "date": "2023-11-15",
+    "items": [
+      { "name": "AirPods Pro", "qty": 1, "price": 45000 }
+    ]
+  },
+  {
+    "id": "ord_3",
+    "user_email": "other@example.com",
+    "total": 85000,
+    "status": "Livré",
+    "date": "2023-12-05",
+    "items": [
+      { "name": "Samsung TV", "qty": 1, "price": 85000 }
+    ]
+  }
+]

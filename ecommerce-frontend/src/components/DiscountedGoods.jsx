@@ -1,19 +1,37 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard from "./ProductCard";
-import fakeProducts from "../data/fakeProducts";
+import { getProducts } from "../services/api";
 
 const DiscountedGoods = ({ category = "all", brand = null }) => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const scrollRefs = useRef({});
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await getProducts();
+        if (res.success) {
+          setProducts(res.data);
+        }
+      } catch (err) {
+        console.error("Erreur fetch products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   /* ================= FILTER PRODUCTS ================= */
   const filteredProducts = useMemo(() => {
-    return fakeProducts.filter((product) => {
+    return products.filter((product) => {
       if (category !== "all" && product.category !== category) return false;
       if (brand && product.brand !== brand) return false;
       return true;
     });
-  }, [category, brand]);
+  }, [products, category, brand]);
 
   /* ================= GROUP BY CATEGORY ================= */
   const groupedProducts = useMemo(() => {
@@ -33,6 +51,14 @@ const DiscountedGoods = ({ category = "all", brand = null }) => {
   const scrollRight = (cat) => {
     scrollRefs.current[cat]?.scrollBy({ left: 250, behavior: "smooth" });
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 mt-12 text-center text-gray-500">
+        Chargement des produits...
+      </div>
+    );
+  }
 
   if (orderedCategories.length === 0) {
     return (

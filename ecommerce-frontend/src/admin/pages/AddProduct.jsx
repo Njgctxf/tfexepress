@@ -29,11 +29,22 @@ export default function AddProduct() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    
     try {
-      await createProduct(form);
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("price", form.price);
+      formData.append("stock", form.stock);
+      formData.append("category", form.category);
+      formData.append("description", form.description);
+      if (form.image) {
+        formData.append("image", form.image);
+      }
+
+      await createProduct(formData);
       navigate("/admin/products");
     } catch (error) {
-      alert("❌ Erreur lors de l'ajout du produit");
+      alert("❌ Erreur lors de l'ajout du produit: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -69,7 +80,7 @@ export default function AddProduct() {
     className="hidden sm:inline-flex items-center gap-2 bg-black text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
   >
     <Save size={16} />
-    {loading ? "Enregistrement..." : "Économiser"}
+    {loading ? "Enregistrement..." : "Enregistrer"}
   </button>
 </div>
 
@@ -111,7 +122,7 @@ export default function AddProduct() {
               />
 
               <Field
-                label="Stock"
+                label="Quantité en stock"
                 name="stock"
                 type="number"
                 value={form.stock}
@@ -132,6 +143,18 @@ export default function AddProduct() {
               />
             </div>
           </Card>
+
+          {/* DESKTOP SUBMIT BUTTON (BOTTOM) */}
+          <div className="hidden sm:flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2"
+            >
+              <Save size={18} />
+              {loading ? "Enregistrement..." : "Enregistrer le produit"}
+            </button>
+          </div>
         </div>
 
         {/* RIGHT COLUMN */}

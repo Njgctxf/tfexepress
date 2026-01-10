@@ -121,6 +121,10 @@ const Header = () => {
                       {user.email}
                     </div>
 
+                    <Link to="/dashboard" className="menu-item">
+                      Mon Tableau de bord
+                    </Link>
+
                     <Link to="/favorites" className="menu-item">
                       Favoris
                     </Link>

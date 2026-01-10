@@ -8,22 +8,54 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data?.session?.user ?? null);
-      setLoading(false);
-    });
+    const initAuth = async () => {
+      try {
+        console.log("DEBUG: AuthProvider initializing...");
+        
+        // MOCK AUTH IF PLACEHOLDER
+        if (supabase.supabaseUrl.includes("placeholder-project")) {
+          console.warn("DEBUG: Using MOCK AUTH because Supabase is not configured.");
+          const savedMockUser = localStorage.getItem("mock_user");
+          setUser(savedMockUser ? JSON.parse(savedMockUser) : null);
+          setLoading(false);
+          return;
+        }
 
-    const { data: authListener } =
-      supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user ?? null);
-      });
-
-    return () => {
-      authListener.subscription.unsubscribe();
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.warn("DEBUG: Supabase session error:", error.message);
+        }
+        setUser(data?.session?.user ?? null);
+      } catch (err) {
+        console.error("DEBUG: Auth initialization failed:", err);
+      } finally {
+        console.log("DEBUG: AuthProvider loading set to false");
+        setLoading(false);
+      }
     };
+
+    initAuth();
+
+    if (!supabase.supabaseUrl.includes("placeholder-project")) {
+      const { data: authListener } =
+        supabase.auth.onAuthStateChange((_event, session) => {
+          setUser(session?.user ?? null);
+        });
+
+      return () => {
+        authListener.subscription.unsubscribe();
+      };
+    }
   }, []);
 
   const register = async (email, password) => {
+    if (supabase.supabaseUrl.includes("placeholder-project")) {
+      const mockUser = { id: "mock-id", email };
+      setUser(mockUser);
+      localStorage.setItem("mock_user", JSON.stringify(mockUser));
+      return { data: { user: mockUser } };
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -31,7 +63,6 @@ export const AuthProvider = ({ children }) => {
 
     if (error) throw error;
 
-    // 🔥 IMPORTANT
     if (data?.session?.user) {
       setUser(data.session.user);
     }
@@ -40,6 +71,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
+    if (supabase.supabaseUrl.includes("placeholder-project")) {
+      const mockUser = { id: "mock-id", email };
+      setUser(mockUser);
+      localStorage.setItem("mock_user", JSON.stringify(mockUser));
+      return { data: { user: mockUser } };
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -47,7 +85,6 @@ export const AuthProvider = ({ children }) => {
 
     if (error) throw error;
 
-    // 🔥 IMPORTANT
     if (data?.session?.user) {
       setUser(data.session.user);
     }

@@ -1,0 +1,16 @@
+[
+  {
+    "_id": "feat1",
+    "category": { "id": "electronics", "name": "Électronique", "slug": "electronics" },
+    "image": "https://images.unsplash.com/photo-1526733158272-44039cecc9a0?q=80&w=800&auto=format&fit=crop",
+    "active": true,
+    "position": 1
+  },
+  {
+    "_id": "feat2",
+    "category": { "id": "chaussures", "name": "Chaussures", "slug": "chaussures" },
+    "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop",
+    "active": true,
+    "position": 2
+  }
+]

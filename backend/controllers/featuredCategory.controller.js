@@ -1,13 +1,25 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import FeaturedCategory from "../models/FeaturedCategory.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /* =====================
    GET FEATURED CATEGORIES
 ===================== */
 export const getFeaturedCategories = async (req, res) => {
   try {
-    const data = await FeaturedCategory.find({ active: true })
-      .populate("category")
-      .sort({ position: 1 });
+    let data = [];
+    try {
+      data = await FeaturedCategory.find({ active: true })
+        .populate("category")
+        .sort({ position: 1 });
+    } catch (e) {
+      console.warn("MongoDB unavailable, using JSON fallback for featured categories");
+      data = JSON.parse(fs.readFileSync(path.join(__dirname, "../data/featuredCategories.json"), "utf8"));
+    }
 
     res.json(data);
   } catch (error) {
