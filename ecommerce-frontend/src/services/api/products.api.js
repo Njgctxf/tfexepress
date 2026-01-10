@@ -1,116 +1,153 @@
-import { API_URL } from "./config.js";
+import { supabase } from "../../lib/supabase";
+
+const SUPABASE_BUCKET_URL = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images`;
 
 /**
- * Récupère tous les produits avec filtres optionnels
- * @param {Object} filters - Filtres de recherche
- * @returns {Promise<Object>} Liste des produits
+ * Récupère tous les produits avec filtres
  */
 export async function getProducts(filters = {}) {
-  const queryParams = new URLSearchParams();
+  let query = supabase
+    .from("products")
+    .select(`
+      *,
+      category:categories(id, name, slug)
+    `)
+    .order('created_at', { ascending: false });
 
-  if (filters.category) queryParams.append("category", filters.category);
-  if (filters.minPrice) queryParams.append("minPrice", filters.minPrice);
-  if (filters.maxPrice) queryParams.append("maxPrice", filters.maxPrice);
-  if (filters.search) queryParams.append("search", filters.search);
-  if (filters.featured) queryParams.append("featured", filters.featured);
-  if (filters.sort) queryParams.append("sort", filters.sort);
-  if (filters.page) queryParams.append("page", filters.page);
-  if (filters.limit) queryParams.append("limit", filters.limit);
+  // 1. Catégorie
+  if (filters.category) {
+    if (!isNaN(filters.category)) {
+        // ID numérique (Supabase)
+        query = query.eq("category_id", filters.category);
+    } 
+    // Si c'est un slug (vieux code), on ignore ou on gère différemment, 
+    // mais pour l'instant le frontend envoie des IDs.
+  }
 
-  const url = `${API_URL}/products${queryParams.toString() ? `?${queryParams}` : ""}`;
-  
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Erreur lors du chargement des produits");
-  
-  const data = await res.json();
-  return data;
+  // 2. Recherche
+  if (filters.search) {
+    query = query.ilike("name", `%${filters.search}%`);
+  }
+
+  // 3. Featured
+  if (filters.featured) {
+    query = query.eq("is_featured", true);
+  }
+
+  // 4. Prix
+  if (filters.minPrice) query = query.gte("price", filters.minPrice);
+  if (filters.maxPrice) query = query.lte("price", filters.maxPrice);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Supabase error (getProducts):", error);
+    return { success: false, data: [] };
+  }
+
+  // Mapping pour compatibilité frontend
+  const formattedData = data.map(p => ({
+    ...p,
+    // S'assurer que 'images' est un tableau
+    images: Array.isArray(p.images) ? p.images : (p.images ? JSON.parse(p.images) : [])
+  }));
+
+  return { success: true, data: formattedData };
 }
 
 /**
- * Récupère un produit par son ID
- * @param {string} id - ID du produit
- * @returns {Promise<Object>} Produit
+ * Récupère un produit par ID
  */
 export async function getProductById(id) {
-  const res = await fetch(`${API_URL}/products/${id}`);
-  if (!res.ok) throw new Error("Produit non trouvé");
+  const { data, error } = await supabase
+    .from("products")
+    .select(`
+      *,
+      category:categories(id, name, slug)
+    `)
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
   
-  const data = await res.json();
-  return data;
+  return { success: true, data };
 }
 
 /**
- * Crée un nouveau produit
- * @param {Object} product - Données du produit
- * @returns {Promise<Object>} Produit créé
+ * Crée un produit avec support upload image
  */
-export async function createProduct(product) {
-  const isFormData = product instanceof FormData;
-  
-  const res = await fetch(`${API_URL}/products`, {
-    method: "POST",
-    headers: isFormData ? {} : {
-      "Content-Type": "application/json",
-    },
-    body: isFormData ? product : JSON.stringify(product),
-  });
+export async function createProduct(productData) {
+  let imageUrl = null;
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Erreur lors de la création du produit");
+  // 1. Upload Image si présent (FormData)
+  if (productData instanceof FormData) {
+    const file = productData.get("image");
+    if (file && file instanceof File) {
+      const fileName = `${Date.now()}-${file.name}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("images")
+        .upload(fileName, file);
 
-  return data;
+      if (uploadError) throw uploadError;
+      imageUrl = `${SUPABASE_BUCKET_URL}/${fileName}`;
+    }
+    
+    // Convertir FormData en Objet simple pour l'insertion DB
+    const name = productData.get("name");
+    const price = productData.get("price");
+    const stock = productData.get("stock");
+    const description = productData.get("description");
+    const category_id = productData.get("category");
+
+    productData = {
+      name,
+      price,
+      stock,
+      description,
+      category_id,
+      images: imageUrl ? [imageUrl] : [],
+    };
+  }
+
+  // 2. Insérer dans la table
+  const { data, error } = await supabase
+    .from("products")
+    .insert([productData])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { success: true, data };
 }
 
 /**
- * Met à jour un produit existant
- * @param {string} id - ID du produit
- * @param {Object} product - Nouvelles données
- * @returns {Promise<Object>} Produit mis à jour
+ * Met à jour un produit
  */
-export async function updateProduct(id, product) {
-  const res = await fetch(`${API_URL}/products/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(product),
-  });
+export async function updateProduct(id, updates) {
+  const { data, error } = await supabase
+    .from("products")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Erreur lors de la mise à jour");
-
-  return data;
+  if (error) throw error;
+  return { success: true, data };
 }
 
 /**
- * Supprime un produit (soft delete)
- * @param {string} id - ID du produit
- * @returns {Promise<Object>} Confirmation
+ * Supprime un produit
  */
 export async function deleteProduct(id) {
-  const res = await fetch(`${API_URL}/products/${id}`, {
-    method: "DELETE",
-  });
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", id);
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Erreur lors de la suppression");
-
-  return data;
+  if (error) throw error;
+  return { success: true, message: "Produit supprimé" };
 }
 
-/**
- * Supprime définitivement un produit (hard delete)
- * @param {string} id - ID du produit
- * @returns {Promise<Object>} Confirmation
- */
-export async function hardDeleteProduct(id) {
-  const res = await fetch(`${API_URL}/products/${id}/hard`, {
-    method: "DELETE",
-  });
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Erreur lors de la suppression");
-
-  return data;
-}
+// Alias pour compatibilité
+export const hardDeleteProduct = deleteProduct;
 

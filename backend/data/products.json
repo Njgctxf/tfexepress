@@ -63,5 +63,31 @@
     ],
     "sold": 0,
     "createdAt": "2026-01-10T03:59:14.634Z"
+  },
+  {
+    "id": 1768018634052,
+    "name": "iphone",
+    "price": "5",
+    "stock": "4",
+    "category": "1768017503489",
+    "description": "ffff",
+    "images": [
+      "/uploads/1768018633974-generated-image (2) copie.png"
+    ],
+    "sold": 0,
+    "createdAt": "2026-01-10T04:17:14.052Z"
+  },
+  {
+    "id": 1768019151047,
+    "name": "rioota",
+    "price": "2",
+    "stock": "2",
+    "category": "1768017503489",
+    "description": "",
+    "images": [
+      "/uploads/1768019151022-generated-image (2) copie.png"
+    ],
+    "sold": 0,
+    "createdAt": "2026-01-10T04:25:51.047Z"
   }
 ]

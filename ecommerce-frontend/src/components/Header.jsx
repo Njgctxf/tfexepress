@@ -81,6 +81,18 @@ const Header = () => {
 
         {/* ACTIONS */}
         <div className="flex items-center gap-4 relative">
+          {/* NAV LINKS (DESKTOP) */}
+          <nav className="hidden lg:flex items-center gap-8">
+            <Link to="/" className="text-sm font-medium hover:text-gray-600">
+              Accueil
+            </Link>
+            <Link to="/shop" className="text-sm font-medium hover:text-gray-600">
+              Boutique
+            </Link>
+            <Link to="/category/vetements" className="text-sm font-medium hover:text-gray-600">
+              Vêtements
+            </Link>
+          </nav>
           <Link to="/favorites" className="relative">
             <Heart size={22} />
             {favorites.length > 0 && (

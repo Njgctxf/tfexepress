@@ -1,50 +1,52 @@
-import { API_URL } from "./config";
+import { supabase } from "../../lib/supabase";
+
+function slugify(text) {
+  return text
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]+/g, "");
+}
 
 /* =====================
-   CATEGORIES
+   CATEGORIES (Supabase)
 ===================== */
 
 export async function getCategories() {
-  const res = await fetch(`${API_URL}/categories`);
-  if (!res.ok) {
-    throw new Error("Erreur chargement catégories");
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .order("name");
+
+  if (error) {
+    console.error("Supabase error (getCategories):", error);
+    return [];
   }
-  return res.json();
+  return data;
 }
 
 export async function createCategory(name) {
-  const res = await fetch(`${API_URL}/categories`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ name }),
-  });
+  const slug = slugify(name);
+  
+  const { data, error } = await supabase
+    .from("categories")
+    .insert([{ name, slug }])
+    .select()
+    .single();
 
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(
-      data.message || "Erreur création catégorie"
-    );
-  }
-
+  if (error) throw error;
   return data;
 }
 
 export async function deleteCategory(id) {
-  const res = await fetch(
-    `${API_URL}/categories/${id}`,
-    { method: "DELETE" }
-  );
+  const { error } = await supabase
+    .from("categories")
+    .delete()
+    .eq("id", id);
 
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(
-      data.message || "Erreur suppression catégorie"
-    );
-  }
-
-  return data;
+  if (error) throw error;
+  return { success: true };
 }

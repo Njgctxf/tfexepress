@@ -10,6 +10,7 @@ import SearchPage from "./pages/SearchPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
+import Shop from "./pages/Shop";
 import AdminRouter from "./admin/AdminRouter";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -22,6 +23,7 @@ function App() {
       <Route path="/category/:category" element={<CategoryProducts />} />
       <Route path="/category-page/:slug" element={<CategoryPage />} />
       <Route path="/search" element={<SearchPage />} />
+      <Route path="/shop" element={<Shop />} />
 
       {/* 🔐 AUTH */}
       <Route path="/login" element={<Login />} />
