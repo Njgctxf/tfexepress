@@ -41,7 +41,7 @@ const CategoryBar = ({ active, setActive }) => {
 
             return (
               <button
-                key={cat._id}
+                key={cat.id}
                 onClick={() => setActive(cat.slug)}
                 className={`
                   flex items-center gap-3 px-6 py-3 rounded-full border

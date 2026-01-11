@@ -22,7 +22,7 @@ const Breadcrumb = ({ category, productName }) => {
             onClick={() => navigate(-1)}
             className="hover:text-red-500 capitalize"
           >
-            {category}
+            {typeof category === 'object' ? category.name : category}
           </button>
         </li>
 

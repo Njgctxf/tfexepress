@@ -1,14 +1,34 @@
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import fakeProducts from "../data/fakeProducts";
+import { getProducts } from "../services/api/products.api";
 import MainLayout from "../layout/MainLayout";
 import ProductCard from "../components/ProductCard";
 
 const CategoryProducts = () => {
   const { category } = useParams();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const products = fakeProducts.filter(
-    (product) => product.category === category
-  );
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const res = await getProducts();
+        if (res.success) {
+          const filtered = res.data.filter(p => {
+             const catName = typeof p.category === 'object' ? p.category.name : p.category;
+             return catName.toLowerCase() === category.toLowerCase();
+          });
+          setProducts(filtered);
+        }
+      } catch (err) {
+        console.error("Erreur CategoryProducts:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [category]);
 
   return (
     <MainLayout>
@@ -19,7 +39,9 @@ const CategoryProducts = () => {
           {category}
         </h1>
 
-        {products.length === 0 ? (
+        {loading ? (
+          <p className="text-gray-500 text-sm">Chargement...</p>
+        ) : products.length === 0 ? (
           <p className="text-gray-500 text-sm">
             Aucun produit dans cette catégorie
           </p>

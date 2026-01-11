@@ -36,8 +36,12 @@ const DiscountedGoods = ({ category = "all", brand = null }) => {
   /* ================= GROUP BY CATEGORY ================= */
   const groupedProducts = useMemo(() => {
     return filteredProducts.reduce((acc, product) => {
-      if (!acc[product.category]) acc[product.category] = [];
-      acc[product.category].push(product);
+      const categoryName = typeof product.category === 'object' 
+        ? product.category.name 
+        : product.category;
+      
+      if (!acc[categoryName]) acc[categoryName] = [];
+      acc[categoryName].push(product);
       return acc;
     }, {});
   }, [filteredProducts]);

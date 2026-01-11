@@ -1,12 +1,27 @@
+import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
-import fakeProducts from "../data/fakeProducts";
+import { getProducts } from "../services/api/products.api";
 
 const PromoSection = () => {
-  const promos = fakeProducts.filter(
-    (p) => p.oldPrice && p.oldPrice > p.price
-  );
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  if (promos.length === 0) return null;
+  useEffect(() => {
+    getProducts()
+      .then(res => {
+        if (res.success) {
+          const promos = res.data.filter(
+            (p) => (p.old_price && p.old_price > p.price) || (p.discount && p.discount > 0)
+          );
+          setProducts(promos);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return null;
+  if (products.length === 0) return null;
 
   return (
     <section className="max-w-7xl mx-auto px-4 mt-14">
@@ -15,7 +30,7 @@ const PromoSection = () => {
       </h2>
 
       <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-        {promos.map((product) => (
+        {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>

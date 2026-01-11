@@ -1,42 +1,65 @@
-import { useParams } from "react-router-dom";
-import { useEffect } from "react";
-import { useCart } from "../context/CartContext";
-import { useFavorites } from "../context/FavoritesContext";
-import fakeProducts from "../data/fakeProducts";
-
+import { useState, useEffect } from "react";
+import { getProductById, getProducts } from "../services/api/products.api";
 import MainLayout from "../layout/MainLayout";
 import ProductImageSlider from "../components/ProductImageSlider";
 import ProductCard from "../components/ProductCard";
 import Breadcrumb from "../components/Breadcrumb";
+import { useCart } from "../context/CartContext";
+import { useFavorites } from "../context/FavoritesContext";
+import { useParams } from "react-router-dom";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
-  const { toggleFavorite, isFavorite } = useFavorites(); // ✅ ICI SEULEMENT
+  const { toggleFavorite, isFavorite } = useFavorites();
+  const [product, setProduct] = useState(null);
+  const [similarProducts, setSimilarProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await getProductById(id);
+        if (res.success) {
+          setProduct(res.data);
+          
+          // Fetch similar products
+          const productsRes = await getProducts();
+          if (productsRes.success) {
+            const currentCat = typeof res.data.category === 'object' ? res.data.category.id : res.data.category_id;
+            const filtered = productsRes.data.filter(p => {
+               const pCat = typeof p.category === 'object' ? p.category.id : p.category_id;
+               return pCat === currentCat && p.id !== res.data.id;
+            });
+            setSimilarProducts(filtered);
+          }
+        }
+      } catch (err) {
+        console.error("Erreur ProductDetails:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, [id]);
 
-  const product = fakeProducts.find(
-    (p) => p.id === Number(id)
-  );
-
-  if (!product) {
+  if (loading) {
     return (
       <MainLayout>
-        <div className="p-10 text-center text-gray-500">
-          Produit introuvable
-        </div>
+        <div className="p-10 text-center text-gray-500">Chargement...</div>
       </MainLayout>
     );
   }
 
-  const similarProducts = fakeProducts.filter(
-    (p) =>
-      p.category === product.category &&
-      p.id !== product.id
-  );
+  if (!product) {
+    return (
+      <MainLayout>
+        <div className="p-10 text-center text-gray-500">Produit introuvable</div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

@@ -10,11 +10,14 @@ const CategoryPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
     getProducts()
-      .then((data) => {
+      .then((res) => {
+        const data = res.data || [];
         const filtered = data.filter(
-          (p) => p.category?.slug === slug || p.category === slug
+          (p) => {
+            const catSlug = p.category && typeof p.category === 'object' ? p.category.slug : p.category;
+            return catSlug === slug;
+          }
         );
         setProducts(filtered);
       })
@@ -38,7 +41,7 @@ const CategoryPage = () => {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {products.map((product) => (
-              <ProductCard key={product._id} product={product} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}

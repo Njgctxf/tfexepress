@@ -67,7 +67,7 @@ const ProductCard = ({ product }) => {
       {/* IMAGE */}
       <div className="h-[150px] flex items-center justify-center mb-4 overflow-hidden relative">
         <img
-          src={product.image}
+          src={product.image || (product.images && product.images[0])}
           alt={product.name}
           className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
         />

@@ -48,7 +48,8 @@ export async function getProducts(filters = {}) {
   // Mapping pour compatibilité frontend
   const formattedData = data.map(p => ({
     ...p,
-    // S'assurer que 'images' est un tableau
+    oldPrice: p.old_price,
+    isFeatured: p.is_featured,
     images: Array.isArray(p.images) ? p.images : (p.images ? JSON.parse(p.images) : [])
   }));
 
@@ -69,8 +70,16 @@ export async function getProductById(id) {
     .single();
 
   if (error) throw error;
+  if (!data) return { success: false, data: null };
   
-  return { success: true, data };
+  const formatted = {
+    ...data,
+    oldPrice: data.old_price,
+    isFeatured: data.is_featured,
+    images: Array.isArray(data.images) ? data.images : (data.images ? JSON.parse(data.images) : [])
+  };
+
+  return { success: true, data: formatted };
 }
 
 /**
@@ -89,15 +98,15 @@ export async function createProduct(productData) {
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
-      imageUrl = `${SUPABASE_BUCKET_URL}/${fileName}`;
+      imageUrl = `${SUPABASE_BUCKET_URL}/${uploadData.path}`;
     }
     
     // Convertir FormData en Objet simple pour l'insertion DB
     const name = productData.get("name");
-    const price = productData.get("price");
-    const stock = productData.get("stock");
+    const price = parseFloat(productData.get("price")) || 0;
+    const stock = parseInt(productData.get("stock")) || 0;
     const description = productData.get("description");
-    const category_id = productData.get("category");
+    const category_id = productData.get("category") ? parseInt(productData.get("category")) : null;
 
     productData = {
       name,
