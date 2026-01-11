@@ -37,13 +37,19 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await register(email, password);
-      // ❌ PAS de navigate ici
-      // ✅ useEffect(user) gère la redirection
+      const res = await register(email, password);
+      
+      if (res?.requiresConfirmation) {
+        setError("Compte créé ! Veuillez vérifier votre email pour confirmer.");
+        setLoading(false); // Stop loading manually since no redirect
+        return;
+      }
+      
+      // Si on est là, l'utilisateur est connecté et le useEffect va rediriger
     } catch (err) {
       setError(err.message || "Erreur lors de la création du compte");
     } finally {
-      setLoading(false);
+      if (!user) setLoading(false); // Only stop loading if we didn't log in (otherwise we want to show loading until redirect)
     }
   };
 

@@ -13,12 +13,8 @@ export const AuthProvider = ({ children }) => {
         console.log("DEBUG: AuthProvider initializing...");
         
         // MOCK AUTH IF PLACEHOLDER
-        if (supabase.supabaseUrl.includes("placeholder-project")) {
-          console.warn("DEBUG: Using MOCK AUTH because Supabase is not configured.");
-          const savedMockUser = localStorage.getItem("mock_user");
-          setUser(savedMockUser ? JSON.parse(savedMockUser) : null);
-          setLoading(false);
-          return;
+        if (!supabase.supabaseUrl || supabase.supabaseUrl.includes("placeholder")) {
+           console.warn("DEBUG: Supabase URL might be invalid or placeholder. Checking session anyway.");
         }
 
         const { data, error } = await supabase.auth.getSession();
@@ -49,12 +45,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const register = async (email, password) => {
-    if (supabase.supabaseUrl.includes("placeholder-project")) {
-      const mockUser = { id: "mock-id", email };
-      setUser(mockUser);
-      localStorage.setItem("mock_user", JSON.stringify(mockUser));
-      return { data: { user: mockUser } };
-    }
+    // OLD MOCK REMOVED
+
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -63,20 +55,21 @@ export const AuthProvider = ({ children }) => {
 
     if (error) throw error;
 
+    // Si confirmation email requise, session est null mais user existe
     if (data?.session?.user) {
       setUser(data.session.user);
+    } else if (data?.user) {
+      // Cas où l'email doit être confirmé
+      // On ne loggue pas l'utilisateur tout de suite
+      return { ...data, requiresConfirmation: true };
     }
 
     return data;
   };
 
   const login = async (email, password) => {
-    if (supabase.supabaseUrl.includes("placeholder-project")) {
-      const mockUser = { id: "mock-id", email };
-      setUser(mockUser);
-      localStorage.setItem("mock_user", JSON.stringify(mockUser));
-      return { data: { user: mockUser } };
-    }
+    // OLD MOCK REMOVED
+
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,

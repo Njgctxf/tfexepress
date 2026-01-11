@@ -8,6 +8,8 @@ import {
   LogOut,
   Tags,
   Star,
+  RotateCcw,
+  Ticket
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -23,7 +25,9 @@ export default function Sidebar() {
       icon: Star,
     },
     { name: "Commandes", path: "/admin/orders", icon: ShoppingCart },
+    { name: "Retours / SAV", path: "/admin/returns", icon: RotateCcw },
     { name: "Utilisateurs", path: "/admin/users", icon: Users },
+    { name: "Coupons & Offres", path: "/admin/coupons", icon: Ticket },
   ];
 
   return (
@@ -38,7 +42,7 @@ export default function Sidebar() {
             key={item.name}
             to={item.path}
             onClick={() => setSidebarOpen(false)}
-            end
+            end={item.path === "/admin"}
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition ${
                 isActive
