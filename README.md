@@ -29,7 +29,7 @@ Ce projet est une plateforme e-commerce complète comprenant :
 
 - Node.js
 - Express.js
-- MongoDB (ou votre base de données)
+- supabase
 - JWT pour l'authentification
 
 ## 📦 Installation
@@ -59,8 +59,7 @@ npm install
 
 ```env
 PORT=5000
-MONGODB_URI=votre_uri_mongodb
-JWT_SECRET=votre_secret_jwt
+supabase =votre_uri_supabase
 ```
 
 2. Créez un fichier `.env` dans le dossier `ecommerce-frontend` si nécessaire.
