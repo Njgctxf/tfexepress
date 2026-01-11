@@ -3,10 +3,11 @@ import MainLayout from "../layout/MainLayout";
 import { useAuth } from "../context/AuthContext";
 import { Package, MapPin, Heart, Save, Trash, User, Truck, RotateCcw, Award, Ticket, Printer, CheckCircle, Plus, X } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function UserDashboard() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("orders");
   const [loading, setLoading] = useState(true);
 
@@ -33,10 +34,14 @@ export default function UserDashboard() {
   const [newAddress, setNewAddress] = useState({ title: "", address: "", city: "", phone: "" });
 
   useEffect(() => {
+    if (!user && !authLoading) {
+        navigate("/login");
+        return;
+    }
     if (user) {
       fetchDashboardData();
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   async function fetchDashboardData() {
     try {
@@ -68,12 +73,14 @@ export default function UserDashboard() {
         .order("created_at", { ascending: false });
       if (ordersData) setOrders(ordersData);
 
-      // 3. Fetch Favorites
+      // 3. Fetch Favorites (Filter out null products)
       const { data: favData } = await supabase
         .from("favorites")
         .select(`id, product:products (*)`)
         .eq("user_id", user.id);
-      if (favData) setFavorites(favData.map(f => ({ ...f.product, fav_id: f.id })));
+      if (favData) {
+        setFavorites(favData.filter(f => f.product).map(f => ({ ...f.product, fav_id: f.id })));
+      }
 
       // 4. Fetch Extra Addresses
       const { data: addrData } = await supabase
@@ -82,11 +89,24 @@ export default function UserDashboard() {
         .eq("user_id", user.id);
       if (addrData) setAddresses(addrData);
 
-      // 5. Fetch Coupons
-      setCoupons([
-        { code: "BIENVENUE10", description: "10% de réduction pour vous", expires: "2026-12-31", discount: "10%" },
-        { code: "FIDELITE5", description: "-5000 FCFA dès 20000 FCFA d'achat", expires: "2026-06-01", discount: "5000 FCFA" }
-      ]);
+      // 5. Fetch Coupons from DB
+      const { data: couponsData } = await supabase
+        .from("coupons")
+        .select("*")
+        .gte("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false });
+      
+      if (couponsData) {
+        setCoupons(couponsData.map(c => ({
+            code: c.code,
+            description: c.description,
+            expires: c.expires_at,
+            discount: `-${c.discount_percent}%`
+        })));
+      } else {
+        // Fallback or empty
+        setCoupons([]);
+      }
 
     } catch (error) {
       console.error("Dashboard Fetch Error:", error);
@@ -102,11 +122,10 @@ export default function UserDashboard() {
     setMessage("");
 
     try {
-      // Utiliser upsert au lieu de update pour gérer le cas où le profil n'existe pas encore
       const { error } = await supabase
         .from("profiles")
         .upsert({ 
-            id: user.id, // Important pour l'upsert
+            id: user.id, 
             updated_at: new Date().toISOString(),
             ...formData 
         });
@@ -167,6 +186,7 @@ export default function UserDashboard() {
     }
   };
 
+  if (authLoading) return <div className="h-screen flex items-center justify-center font-bold text-gray-400">Vérification de session...</div>;
   if (!user) return null;
 
   return (
@@ -309,6 +329,18 @@ export default function UserDashboard() {
                                     <input type="text" className="w-full border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-black outline-none bg-gray-50" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                                 </div>
                                 <div className="col-span-2">
+                                    <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Adresse</label>
+                                    <input type="text" className="w-full border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-black outline-none bg-gray-50" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                                </div>
+                                <div className="col-span-2 md:col-span-1">
+                                    <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Ville</label>
+                                    <input type="text" className="w-full border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-black outline-none bg-gray-50" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
+                                </div>
+                                <div className="col-span-2 md:col-span-1">
+                                    <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Code Postal</label>
+                                    <input type="text" className="w-full border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-black outline-none bg-gray-50" value={formData.zip} onChange={e => setFormData({...formData, zip: e.target.value})} />
+                                </div>
+                                <div className="col-span-2">
                                      <button type="submit" disabled={saving} className="bg-black text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2">
                                         <Save size={16} /> {saving ? "..." : "Enregistrer"}
                                     </button>
@@ -429,8 +461,8 @@ export default function UserDashboard() {
                 
                 {/* MODAL: ADD ADDRESS */}
                 {showAddressModal && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-white/80 backdrop-blur-sm rounded-2xl">
-                        <div className="bg-white border text-left p-6 rounded-2xl shadow-2xl w-full max-w-sm relative">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                        <div className="bg-white border text-left p-6 rounded-2xl shadow-2xl w-full max-w-sm relative animate-in fade-in zoom-in duration-200">
                             <button onClick={() => setShowAddressModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-black">
                                 <X size={24} />
                             </button>
