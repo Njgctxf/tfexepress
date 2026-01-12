@@ -3,19 +3,29 @@ import { getProducts, getCategories } from "../services/api";
 import MainLayout from "../layout/MainLayout";
 import ProductCard from "../components/ProductCard";
 import { Search, Filter, X, SlidersHorizontal, Star, TrendingUp, DollarSign, Clock, Heart } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 
 export default function Shop() {
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get('category');
+  
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Filters
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState(categoryParam || "all");
   const [searchQuery, setSearchQuery] = useState("");
   const [priceRange, setPriceRange] = useState({ min: 0, max: 100000 });
   const [sortBy, setSortBy] = useState("recent"); // recent, popular, price-asc, price-desc, rating
   const [showFilters, setShowFilters] = useState(false);
+
+  // Update active category when URL param changes
+  useEffect(() => {
+    if (categoryParam) {
+      setActiveCategory(categoryParam);
+    }
+  }, [categoryParam]);
 
   useEffect(() => {
     fetchData();

@@ -47,10 +47,11 @@ const Categories = () => {
             </h3>
 
             <button
-              onClick={() =>
-                navigate(`/category/${item.category.slug}`)
-              }
-              className="mt-4 bg-white text-gray-900 px-4 py-2 rounded-full"
+              onClick={() => {
+                const catId = item.category?.id || item.category?._id || item.category?.slug;
+                navigate(`/shop?category=${catId}`);
+              }}
+              className="mt-4 bg-white text-gray-900 px-4 py-2 rounded-full font-semibold hover:bg-gray-100 transition-colors"
             >
               Voir plus →
             </button>

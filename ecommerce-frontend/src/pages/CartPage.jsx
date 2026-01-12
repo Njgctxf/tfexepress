@@ -1,4 +1,4 @@
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2, Trash } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
@@ -8,6 +8,7 @@ const CartPage = () => {
     increaseQty,
     decreaseQty,
     removeFromCart,
+    clearCart,
     totalPrice,
   } = useCart();
 
@@ -16,8 +17,21 @@ const CartPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ================= LEFT : CART ================= */}
         <div className="lg:col-span-2 bg-white rounded shadow-sm">
-          <div className="border-b px-6 py-4 font-bold text-lg">
-            Panier ({cart.length})
+          <div className="border-b px-6 py-4 flex items-center justify-between">
+            <span className="font-bold text-lg">Panier ({cart.length})</span>
+            {cart.length > 0 && (
+              <button 
+                onClick={() => {
+                  if (window.confirm("Voulez-vous vraiment vider le panier ?")) {
+                    clearCart();
+                  }
+                }}
+                className="flex items-center gap-2 text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors text-sm font-semibold"
+              >
+                <Trash size={16} />
+                Vider le panier
+              </button>
+            )}
           </div>
 
           {cart.map((item) => {
