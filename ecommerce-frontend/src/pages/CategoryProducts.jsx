@@ -16,8 +16,23 @@ const CategoryProducts = () => {
         const res = await getProducts();
         if (res.success) {
           const filtered = res.data.filter(p => {
-             const catName = typeof p.category === 'object' ? p.category.name : p.category;
-             return catName.toLowerCase() === category.toLowerCase();
+             // Handle different category formats
+             const productCat = p.category;
+             
+             // If category is an object
+             if (typeof productCat === 'object' && productCat) {
+               const catId = productCat.id || productCat._id;
+               const catName = productCat.name || productCat.nom;
+               const catSlug = productCat.slug;
+               
+               return catId === category || 
+                      catName?.toLowerCase() === category.toLowerCase() ||
+                      catSlug?.toLowerCase() === category.toLowerCase();
+             }
+             
+             // If category is a string/ID
+             return productCat === category || 
+                    productCat?.toLowerCase() === category.toLowerCase();
           });
           setProducts(filtered);
         }
