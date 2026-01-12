@@ -1,4 +1,5 @@
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
 const CartPage = () => {
@@ -131,9 +132,9 @@ const CartPage = () => {
           </div>
 
           <div className="px-5 pb-5">
-            <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded font-semibold">
+            <Link to="/checkout" className="block text-center w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded font-semibold transition-colors">
               Commander ({totalPrice.toLocaleString()} FCFA)
-            </button>
+            </Link>
           </div>
         </div>
       </div>

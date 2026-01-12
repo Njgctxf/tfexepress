@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
 import Shop from "./pages/Shop";
+import Checkout from "./pages/Checkout";
 import AdminRouter from "./admin/AdminRouter";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -35,6 +36,15 @@ function App() {
         element={
           <ProtectedRoute>
             <CartPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/checkout"
+        element={
+          <ProtectedRoute>
+            <Checkout />
           </ProtectedRoute>
         }
       />

@@ -47,31 +47,37 @@ export default function UserDashboard() {
     try {
       setLoading(true);
       
-      // 1. Fetch Profile (Points, Tier)
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-        
-      if (profileData) {
-        setProfile(profileData);
-        setFormData({
-            full_name: profileData.full_name || "",
-            address: profileData.address || "",
-            city: profileData.city || "",
-            zip: profileData.zip || "",
-            phone: profileData.phone || ""
-        });
+      // 1. Fetch Profile (Points, Tier) from Backend
+      try {
+        const res = await fetch(`http://localhost:5000/api/profiles/me?email=${user.email}`);
+        if (res.ok) {
+            const profileData = await res.json();
+            if (profileData) {
+                setProfile(profileData);
+                setFormData({
+                    full_name: profileData.full_name || "",
+                    address: profileData.address || "",
+                    city: profileData.city || "",
+                    zip: profileData.zip || "",
+                    phone: profileData.phone || ""
+                });
+            }
+        }
+      } catch (err) {
+        console.error("Profile fetch error:", err);
       }
 
       // 2. Fetch Orders with Tracking info
-      const { data: ordersData } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("user_email", user.email)
-        .order("created_at", { ascending: false });
-      if (ordersData) setOrders(ordersData);
+      // 2. Fetch Orders from Express Backend
+      try {
+        const res = await fetch(`http://localhost:5000/api/orders/my-orders?email=${user.email}`);
+        if (res.ok) {
+          const ordersData = await res.json();
+          setOrders(ordersData);
+        }
+      } catch (err) {
+        console.error("Failed to fetch orders from backend:", err);
+      }
 
       // 3. Fetch Favorites (Filter out null products)
       const { data: favData } = await supabase
@@ -122,17 +128,20 @@ export default function UserDashboard() {
     setMessage("");
 
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .upsert({ 
-            id: user.id, 
-            updated_at: new Date().toISOString(),
-            ...formData 
-        });
+      const res = await fetch("http://localhost:5000/api/profiles/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            email: user.email,
+            ...formData
+        })
+      });
 
-      if (error) throw error;
+      if (!res.ok) throw new Error("Erreur mise à jour");
+      const updatedProfile = await res.json();
+
       setMessage("✅ Informations mises à jour avec succès !");
-      setProfile({ ...profile, ...formData });
+      setProfile({ ...profile, ...updatedProfile });
     } catch (error) {
       setMessage("❌ Erreur: " + error.message);
       console.error(error);

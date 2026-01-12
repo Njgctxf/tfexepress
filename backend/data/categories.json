@@ -23,5 +23,15 @@
     "_id": "1768017503489",
     "name": "bonbon",
     "slug": "bonbon"
+  },
+  {
+    "id": "cat_1768183506364",
+    "name": "Test Category",
+    "slug": "test-category"
+  },
+  {
+    "id": "cat_1768183525618",
+    "name": "bb",
+    "slug": "bb"
   }
 ]

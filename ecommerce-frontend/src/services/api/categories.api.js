@@ -1,4 +1,4 @@
-import { supabase } from "../../lib/supabase";
+const API_URL = "http://localhost:5000/api/categories";
 
 function slugify(text) {
   return text
@@ -16,37 +16,28 @@ function slugify(text) {
 ===================== */
 
 export async function getCategories() {
-  const { data, error } = await supabase
-    .from("categories")
-    .select("*")
-    .order("name");
-
-  if (error) {
-    console.error("Supabase error (getCategories):", error);
-    return [];
+  try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error("Fetch failed");
+      return await res.json();
+  } catch (err) {
+      console.error(err);
+      return [];
   }
-  return data;
 }
 
 export async function createCategory(name) {
-  const slug = slugify(name);
-  
-  const { data, error } = await supabase
-    .from("categories")
-    .insert([{ name, slug }])
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name })
+  });
+  if (!res.ok) throw new Error("Create failed");
+  return await res.json();
 }
 
 export async function deleteCategory(id) {
-  const { error } = await supabase
-    .from("categories")
-    .delete()
-    .eq("id", id);
-
-  if (error) throw error;
+  const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Delete failed");
   return { success: true };
 }

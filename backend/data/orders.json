@@ -6,7 +6,11 @@
     "status": "Livré",
     "date": "2023-10-01",
     "items": [
-      { "name": "iPhone 15", "qty": 1, "price": 129000 }
+      {
+        "name": "iPhone 15",
+        "qty": 1,
+        "price": 129000
+      }
     ]
   },
   {
@@ -16,7 +20,11 @@
     "status": "En cours",
     "date": "2023-11-15",
     "items": [
-      { "name": "AirPods Pro", "qty": 1, "price": 45000 }
+      {
+        "name": "AirPods Pro",
+        "qty": 1,
+        "price": 45000
+      }
     ]
   },
   {
@@ -26,7 +34,488 @@
     "status": "Livré",
     "date": "2023-12-05",
     "items": [
-      { "name": "Samsung TV", "qty": 1, "price": 85000 }
+      {
+        "name": "Samsung TV",
+        "qty": 1,
+        "price": 85000
+      }
     ]
+  },
+  {
+    "id": "ord_1768179724242",
+    "user_email": "integration_test@example.com",
+    "items": [
+      {
+        "id": 1,
+        "name": "Test Item",
+        "price": 5000,
+        "qty": 1
+      }
+    ],
+    "total": 5000,
+    "shipping_address": {
+      "firstName": "Test",
+      "lastName": "User",
+      "email": "integration_test@example.com"
+    },
+    "payment_method": "card",
+    "status": "Expédié",
+    "created_at": "2026-01-12T01:02:04.242Z",
+    "date": "2026-01-12",
+    "tracking_number": "bbc7e6399",
+    "tracking_url": ""
+  },
+  {
+    "id": "ord_1768180257629",
+    "user_email": "riooshoop@gmail.com",
+    "items": [
+      {
+        "id": 3,
+        "name": "MacBook Pro M4",
+        "price": 2499,
+        "rating": 5,
+        "category": "electronics",
+        "images": [
+          "https://images.unsplash.com/photo-1517336714731-489689fd1ca8"
+        ],
+        "qty": 1
+      },
+      {
+        "id": 6,
+        "name": "Adidas Ultraboost",
+        "price": 180,
+        "rating": 4,
+        "category": "chaussures",
+        "images": [
+          "https://images.unsplash.com/photo-1542291026-7eec264c27ff"
+        ],
+        "qty": 1
+      },
+      {
+        "id": 1,
+        "name": "iPhone 17 Pro",
+        "price": 1299,
+        "oldPrice": 1499,
+        "rating": 5,
+        "category": "electronics",
+        "images": [
+          "https://images.unsplash.com/photo-1695048133142-1a2043614d8c"
+        ],
+        "qty": 2
+      },
+      {
+        "id": 2,
+        "created_at": "2026-01-12T05:10:22.940673+00:00",
+        "name": "prems",
+        "description": "fbdfb",
+        "price": 5456456,
+        "stock": 39,
+        "category_id": 10,
+        "images": [],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 10,
+          "name": "chaussures",
+          "slug": "chaussures"
+        },
+        "isFeatured": false,
+        "qty": 2
+      }
+    ],
+    "total": 10918189,
+    "shipping_address": {
+      "firstName": "",
+      "lastName": "",
+      "email": "",
+      "phone": "",
+      "address": "",
+      "city": "",
+      "region": ""
+    },
+    "payment_method": "cod",
+    "status": "Livré",
+    "created_at": "2026-01-12T01:10:57.629Z",
+    "date": "2026-01-12",
+    "tracking_number": "",
+    "tracking_url": ""
+  },
+  {
+    "id": "ord_1768180292435",
+    "user_email": "riooshoop@gmail.com",
+    "items": [
+      {
+        "id": 3,
+        "created_at": "2026-01-12T05:11:21.94277+00:00",
+        "name": "Casque Bluetooth",
+        "description": "uigu",
+        "price": 54,
+        "stock": 2,
+        "category_id": 5,
+        "images": [],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 5,
+          "name": "bonbon",
+          "slug": "bonbon"
+        },
+        "isFeatured": false,
+        "qty": 1
+      },
+      {
+        "id": 1,
+        "created_at": "2026-01-10T22:36:59.79846+00:00",
+        "name": "iphone",
+        "description": "bb",
+        "price": 1,
+        "stock": 1,
+        "category_id": 5,
+        "images": [
+          "https://dqikchghdgdcfbgdrlro.supabase.co/storage/v1/object/public/images/1768055823544-generated-image (2) copie.png"
+        ],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 5,
+          "name": "bonbon",
+          "slug": "bonbon"
+        },
+        "isFeatured": false,
+        "qty": 1
+      }
+    ],
+    "total": 55,
+    "shipping_address": {
+      "firstName": "",
+      "lastName": "",
+      "email": "",
+      "phone": "",
+      "address": "",
+      "city": "",
+      "region": ""
+    },
+    "payment_method": "cod",
+    "status": "Livré",
+    "created_at": "2026-01-12T01:11:32.435Z",
+    "date": "2026-01-12",
+    "tracking_number": "",
+    "tracking_url": ""
+  },
+  {
+    "id": "ord_1768180325666",
+    "user_email": "riooshoop@gmail.com",
+    "items": [
+      {
+        "id": 3,
+        "created_at": "2026-01-12T05:11:21.94277+00:00",
+        "name": "Casque Bluetooth",
+        "description": "uigu",
+        "price": 54,
+        "stock": 2,
+        "category_id": 5,
+        "images": [],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 5,
+          "name": "bonbon",
+          "slug": "bonbon"
+        },
+        "isFeatured": false,
+        "qty": 1
+      },
+      {
+        "id": 1,
+        "created_at": "2026-01-10T22:36:59.79846+00:00",
+        "name": "iphone",
+        "description": "bb",
+        "price": 1,
+        "stock": 1,
+        "category_id": 5,
+        "images": [
+          "https://dqikchghdgdcfbgdrlro.supabase.co/storage/v1/object/public/images/1768055823544-generated-image (2) copie.png"
+        ],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 5,
+          "name": "bonbon",
+          "slug": "bonbon"
+        },
+        "isFeatured": false,
+        "qty": 1
+      }
+    ],
+    "total": 55,
+    "shipping_address": {
+      "firstName": "",
+      "lastName": "",
+      "email": "",
+      "phone": "",
+      "address": "",
+      "city": "",
+      "region": ""
+    },
+    "payment_method": "card",
+    "status": "Livré",
+    "created_at": "2026-01-12T01:12:05.667Z",
+    "date": "2026-01-12",
+    "tracking_number": "",
+    "tracking_url": ""
+  },
+  {
+    "id": "ord_1768180342935",
+    "user_email": "riooshoop@gmail.com",
+    "items": [
+      {
+        "id": 3,
+        "created_at": "2026-01-12T05:11:21.94277+00:00",
+        "name": "Casque Bluetooth",
+        "description": "uigu",
+        "price": 54,
+        "stock": 2,
+        "category_id": 5,
+        "images": [],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 5,
+          "name": "bonbon",
+          "slug": "bonbon"
+        },
+        "isFeatured": false,
+        "qty": 1
+      },
+      {
+        "id": 1,
+        "created_at": "2026-01-10T22:36:59.79846+00:00",
+        "name": "iphone",
+        "description": "bb",
+        "price": 1,
+        "stock": 1,
+        "category_id": 5,
+        "images": [
+          "https://dqikchghdgdcfbgdrlro.supabase.co/storage/v1/object/public/images/1768055823544-generated-image (2) copie.png"
+        ],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 5,
+          "name": "bonbon",
+          "slug": "bonbon"
+        },
+        "isFeatured": false,
+        "qty": 1
+      }
+    ],
+    "total": 55,
+    "shipping_address": {
+      "firstName": "Rioota",
+      "lastName": "Gamer",
+      "email": "riootagameur@gmail.com",
+      "phone": "+2250151060424",
+      "address": "225",
+      "city": "Abidjan",
+      "region": ""
+    },
+    "payment_method": "cod",
+    "status": "Livré",
+    "created_at": "2026-01-12T01:12:22.935Z",
+    "date": "2026-01-12",
+    "tracking_number": "",
+    "tracking_url": ""
+  },
+  {
+    "id": "ord_1768180522296",
+    "user_email": "final_verification@example.com",
+    "items": [
+      {
+        "id": 99,
+        "name": "Produit Test Final",
+        "price": 25000,
+        "qty": 1
+      }
+    ],
+    "total": 25000,
+    "shipping_address": {
+      "firstName": "Client",
+      "lastName": "Final",
+      "email": "final_verification@example.com",
+      "city": "Abidjan"
+    },
+    "payment_method": "mobile",
+    "status": "En cours",
+    "created_at": "2026-01-12T01:15:22.296Z",
+    "date": "2026-01-12",
+    "tracking_number": "",
+    "tracking_url": ""
+  },
+  {
+    "id": "ord_1768180579737",
+    "user_email": "riooshoop@gmail.com",
+    "items": [
+      {
+        "id": 3,
+        "created_at": "2026-01-12T05:11:21.94277+00:00",
+        "name": "Casque Bluetooth",
+        "description": "uigu",
+        "price": 54,
+        "stock": 2,
+        "category_id": 5,
+        "images": [],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 5,
+          "name": "bonbon",
+          "slug": "bonbon"
+        },
+        "isFeatured": false,
+        "qty": 1
+      },
+      {
+        "id": 1,
+        "created_at": "2026-01-10T22:36:59.79846+00:00",
+        "name": "iphone",
+        "description": "bb",
+        "price": 1,
+        "stock": 1,
+        "category_id": 5,
+        "images": [
+          "https://dqikchghdgdcfbgdrlro.supabase.co/storage/v1/object/public/images/1768055823544-generated-image (2) copie.png"
+        ],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 5,
+          "name": "bonbon",
+          "slug": "bonbon"
+        },
+        "isFeatured": false,
+        "qty": 1
+      }
+    ],
+    "total": 55,
+    "shipping_address": {
+      "firstName": "Rioota",
+      "lastName": "Gamer",
+      "email": "riootagameur@gmail.com",
+      "phone": "+2250151060424",
+      "address": "225",
+      "city": "Abidjan",
+      "region": ""
+    },
+    "payment_method": "cod",
+    "status": "Expédié",
+    "created_at": "2026-01-12T01:16:19.737Z",
+    "date": "2026-01-12",
+    "tracking_number": "",
+    "tracking_url": ""
+  },
+  {
+    "id": "ord_1768181727404",
+    "user_email": "riooshoop@gmail.com",
+    "items": [
+      {
+        "id": 3,
+        "created_at": "2026-01-12T05:11:21.94277+00:00",
+        "name": "Casque Bluetooth",
+        "description": "uigu",
+        "price": 54,
+        "stock": 2,
+        "category_id": 5,
+        "images": [],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 5,
+          "name": "bonbon",
+          "slug": "bonbon"
+        },
+        "isFeatured": false,
+        "qty": 1
+      },
+      {
+        "id": 1,
+        "created_at": "2026-01-10T22:36:59.79846+00:00",
+        "name": "iphone",
+        "description": "bb",
+        "price": 1,
+        "stock": 1,
+        "category_id": 5,
+        "images": [
+          "https://dqikchghdgdcfbgdrlro.supabase.co/storage/v1/object/public/images/1768055823544-generated-image (2) copie.png"
+        ],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 5,
+          "name": "bonbon",
+          "slug": "bonbon"
+        },
+        "isFeatured": false,
+        "qty": 1
+      }
+    ],
+    "total": 55,
+    "shipping_address": {
+      "firstName": "Rioota",
+      "lastName": "Gamer",
+      "email": "riootagameur@gmail.com",
+      "phone": "+2250151060424",
+      "address": "225",
+      "city": "Abidjan",
+      "region": ""
+    },
+    "payment_method": "cod",
+    "status": "En cours",
+    "created_at": "2026-01-12T01:35:27.404Z",
+    "date": "2026-01-12",
+    "tracking_number": "",
+    "tracking_url": ""
+  },
+  {
+    "id": "ord_1768182556396",
+    "user_email": "riooshoop@gmail.com",
+    "items": [
+      {
+        "id": 6,
+        "created_at": "2026-01-12T07:45:04.702066+00:00",
+        "name": "Mode",
+        "description": "nn",
+        "price": 1,
+        "stock": 2,
+        "category_id": 5,
+        "images": [
+          "https://dqikchghdgdcfbgdrlro.supabase.co/storage/v1/object/public/images/1768175109180-generated-image (1) copie.png"
+        ],
+        "sold": 0,
+        "is_featured": false,
+        "category": {
+          "id": 5,
+          "name": "bonbon",
+          "slug": "bonbon"
+        },
+        "isFeatured": false,
+        "qty": 1
+      }
+    ],
+    "total": 1,
+    "shipping_address": {
+      "firstName": "",
+      "lastName": "",
+      "email": "",
+      "phone": "",
+      "address": "",
+      "city": "",
+      "region": ""
+    },
+    "payment_method": "card",
+    "status": "En cours",
+    "created_at": "2026-01-12T01:49:16.396Z",
+    "date": "2026-01-12",
+    "tracking_number": "",
+    "tracking_url": ""
   }
 ]

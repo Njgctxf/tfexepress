@@ -9,6 +9,8 @@ import categoryRoutes from "./routes/category.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import statsRoutes from "./routes/stats.routes.js";
+import profileRoutes from "./routes/profile.routes.js";
+import reviewRoutes from "./routes/review.routes.js";
 
 /* ===== ENV ===== */
 dotenv.config();
@@ -52,10 +54,13 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/profiles", profileRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 /* ===== SERVER ===== */
 app.listen(PORT, () => {
   console.log(`✅ Backend lancé sur http://localhost:${PORT}`);
   console.log(`🌍 CORS autorisé pour ${FRONTEND_URL}`);
+  console.log("🔄 Server reloaded via Antigravity");
 });
 

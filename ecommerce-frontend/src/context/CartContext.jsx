@@ -43,11 +43,13 @@ export const CartProvider = ({ children }) => {
   const decreaseQty = (id) => {
     setCart((prev) =>
       prev
-        .map((p) =>
-          p.id === id ? { ...p, qty: p.qty - 1 } : p
-        )
+        .map((p) => (p.id === id ? { ...p, qty: p.qty - 1 } : p))
         .filter((p) => p.qty > 0)
     );
+  };
+
+  const clearCart = () => {
+    setCart([]);
   };
 
   const totalPrice = cart.reduce(
@@ -64,6 +66,7 @@ export const CartProvider = ({ children }) => {
         increaseQty,
         decreaseQty,
         totalPrice,
+        clearCart,
       }}
     >
       {children}

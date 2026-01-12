@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Search, Truck, Edit, Save, X } from "lucide-react";
-import { supabase } from "../../lib/supabase";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -24,12 +23,9 @@ export default function Orders() {
   async function fetchOrders() {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
+      const response = await fetch("http://localhost:5000/api/orders");
+      if (!response.ok) throw new Error("Erreur fetch orders");
+      const data = await response.json();
       setOrders(data || []);
     } catch (err) {
       console.error("Error fetching admin orders:", err);
@@ -53,15 +49,18 @@ export default function Orders() {
     e.preventDefault();
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from("orders")
-        .update(editForm)
-        .eq("id", selectedOrder.id);
+      const response = await fetch(`http://localhost:5000/api/orders/${selectedOrder.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm)
+      });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error("Erreur update order");
+      
+      const updatedOrder = await response.json();
       
       // Update local state
-      setOrders(orders.map(o => o.id === selectedOrder.id ? { ...o, ...editForm } : o));
+      setOrders(orders.map(o => o.id === selectedOrder.id ? updatedOrder : o));
       setSelectedOrder(null);
     } catch (err) {
       alert("Erreur lors de la mise à jour");

@@ -1,0 +1,34 @@
+[
+  {
+    "id": "rev_1768184204743",
+    "product_id": 3,
+    "user_name": "rioo",
+    "rating": 1,
+    "comment": "bonjour",
+    "date": "2026-01-12"
+  },
+  {
+    "id": 1,
+    "product_id": 1,
+    "user_name": "Jean Dupont",
+    "rating": 5,
+    "comment": "Excellent produit, je suis très satisfait de la qualité !",
+    "date": "2023-10-15"
+  },
+  {
+    "id": 2,
+    "product_id": 1,
+    "user_name": "Marie Curie",
+    "rating": 4,
+    "comment": "Bon produit, mais la livraison a pris un peu de temps.",
+    "date": "2023-11-02"
+  },
+  {
+    "id": 3,
+    "product_id": 2,
+    "user_name": "Paul Martin",
+    "rating": 3,
+    "comment": "Moyen, je m'attendais à mieux pour le prix.",
+    "date": "2023-12-01"
+  }
+]

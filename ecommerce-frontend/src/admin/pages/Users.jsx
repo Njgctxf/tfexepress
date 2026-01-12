@@ -18,12 +18,9 @@ export default function Users() {
   async function fetchUsers() {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles') 
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
+      const res = await fetch("http://localhost:5000/api/profiles");
+      if (!res.ok) throw new Error("Erreur fetch users");
+      const data = await res.json();
       setUsers(data || []);
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -44,8 +41,19 @@ export default function Users() {
     e.preventDefault();
     setSaving(true);
     try {
-        await supabase.from("profiles").update(form).eq("id", selectedUser.id);
-        setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...form } : u));
+        const res = await fetch("http://localhost:5000/api/profiles/update", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: selectedUser.email,
+                ...form
+            })
+        });
+
+        if(!res.ok) throw new Error("Erreur update");
+        const updatedUser = await res.json();
+
+        setUsers(users.map(u => u.email === selectedUser.email ? updatedUser : u));
         setSelectedUser(null);
     } catch(err) {
         alert("Erreur de sauvegarde");
