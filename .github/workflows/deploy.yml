@@ -15,12 +15,12 @@ jobs:
       - name: ⚙️ Configuration de Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: 📦 Installation et Build du Frontend
         run: |
           cd ecommerce-frontend
-          npm install
+          npm install --legacy-peer-deps
           CI=false npm run build
 
       - name: 🚀 Transfert vers Hostinger (FTP)
