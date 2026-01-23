@@ -34,4 +34,5 @@ jobs:
           server-dir: public_html/
           protocol: ftp
           port: 21
-          dangerous-clean-slate: true
+          timeout: 60000
+          dangerous-clean-slate: false
