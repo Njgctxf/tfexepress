@@ -33,4 +33,3 @@ jobs:
           server-dir: public_html/
           protocol: ftp
           port: 21
-          secure: false
