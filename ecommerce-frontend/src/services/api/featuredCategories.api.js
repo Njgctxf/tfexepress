@@ -1,19 +1,43 @@
-import { API_URL } from "./config";
+import { supabase } from "../../lib/supabase";
 
 /* =====================
    FEATURED CATEGORIES
 ===================== */
 
-export async function getFeaturedCategories() {
-  const res = await fetch(
-    `${API_URL}/featured-categories`
-  );
-  if (!res.ok) {
-    throw new Error(
-      "Erreur chargement catégories mises en avant"
-    );
+const uploadToStorage = async (file) => {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `featured/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('products') // Using the same bucket for simplicity
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from('products')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  } catch (error) {
+    console.error('Failed to upload featured image:', error);
+    return null;
   }
-  return res.json();
+};
+
+export async function getFeaturedCategories() {
+  const { data, error } = await supabase
+    .from('featured_categories')
+    .select('*, category:categories(id, name)')
+    .order('position');
+
+  if (error) {
+    console.error("Erreur chargement catégories mises en avant:", error);
+    throw new Error("Erreur chargement catégories mises en avant");
+  }
+  return data;
 }
 
 export async function createFeaturedCategory({
@@ -21,45 +45,42 @@ export async function createFeaturedCategory({
   position,
   image,
 }) {
-  const formData = new FormData();
-  formData.append("category", category);
-  formData.append("position", position);
-  formData.append("image", image);
-
-  const res = await fetch(
-    `${API_URL}/featured-categories`,
-    {
-      method: "POST",
-      body: formData,
+  try {
+    let imageUrl = image;
+    if (image instanceof File) {
+      imageUrl = await uploadToStorage(image);
     }
-  );
 
-  const data = await res.json();
+    const payload = {
+       category_id: typeof category === 'object' ? category.id : category,
+       position: Number(position),
+       image_url: imageUrl
+    };
 
-  if (!res.ok) {
-    throw new Error(
-      data.message ||
-        "Erreur création catégorie mise en avant"
-    );
+    const { data, error } = await supabase
+      .from('featured_categories')
+      .insert([payload])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Erreur création catégorie mise en avant:", error);
+    throw error;
   }
-
-  return data;
 }
 
 export async function deleteFeaturedCategory(id) {
-  const res = await fetch(
-    `${API_URL}/featured-categories/${id}`,
-    { method: "DELETE" }
-  );
+  const { error } = await supabase
+    .from('featured_categories')
+    .delete()
+    .eq('id', id);
 
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(
-      data.message ||
-        "Erreur suppression catégorie mise en avant"
-    );
+  if (error) {
+    console.error("Erreur suppression catégorie mise en avant:", error);
+    throw new Error("Erreur suppression catégorie mise en avant");
   }
 
-  return data;
+  return { success: true };
 }

@@ -1,18 +1,18 @@
-const API_URL = "http://localhost:5000/api/reviews";
+import { supabase } from "../../lib/supabase";
 
 /**
  * Récupère les avis d'un produit
  */
 export async function getProductReviews(productId) {
     try {
-        const res = await fetch(`${API_URL}/${productId}`);
-        if (!res.ok) {
-            // Si 404 ou autre, on renvoie tableau vide pour ne pas casser l'UI
-            if (res.status === 404) return [];
-            throw new Error("Failed to fetch reviews");
-        }
-        const data = await res.json();
-        return Array.isArray(data) ? data : [];
+        const { data, error } = await supabase
+            .from("reviews")
+            .select("*")
+            .eq("product_id", productId)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        return data || [];
     } catch (error) {
         console.error("API Error (getReviews):", error);
         return [];
@@ -24,14 +24,14 @@ export async function getProductReviews(productId) {
  */
 export async function addReview(reviewData) {
     try {
-        const res = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(reviewData)
-        });
+        const { data, error } = await supabase
+            .from("reviews")
+            .insert([reviewData])
+            .select()
+            .single();
 
-        if (!res.ok) throw new Error("Failed to add review");
-        return await res.json();
+        if (error) throw error;
+        return data;
     } catch (error) {
         console.error("API Error (addReview):", error);
         throw error;

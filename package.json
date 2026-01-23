@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install:all": "npm install && cd backend && npm install && cd ../ecommerce-frontend && npm install",
-    "build:frontend": "cd ecommerce-frontend && npm run build",
-    "start:backend": "cd backend && npm start",
-    "heroku-postbuild": "npm run build:frontend"
+    "install:frontend": "cd ecommerce-frontend && npm install",
+    "build": "cd ecommerce-frontend && npm run build",
+    "preview": "cd ecommerce-frontend && npm run preview"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.90.1"
