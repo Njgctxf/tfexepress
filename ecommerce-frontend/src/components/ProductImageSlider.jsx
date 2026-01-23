@@ -26,6 +26,9 @@ const ProductImageSlider = ({ images }) => {
         <img
           src={images[index]}
           alt="product"
+          width="500"
+          height="500"
+          loading="eager"
           className="h-full object-contain transition-all duration-300"
         />
       </div>
@@ -55,9 +58,8 @@ const ProductImageSlider = ({ images }) => {
           <button
             key={i}
             onClick={() => setIndex(i)}
-            className={`h-2 w-2 rounded-full transition ${
-              i === index ? "bg-red-500" : "bg-gray-300"
-            }`}
+            className={`h-2 w-2 rounded-full transition ${i === index ? "bg-red-500" : "bg-gray-300"
+              }`}
           />
         ))}
       </div>

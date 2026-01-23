@@ -2,10 +2,12 @@ import { useState } from "react";
 import MainLayout from "../layout/MainLayout";
 import CategoryBar from "../components/CategoryBar";
 import PopularBrands from "../components/PopularBrands";
-import Categories from "../components/CategoryCard";
+
 import Hero from "../components/Hero";
 import DiscountedGoods from "../components/DiscountedGoods";
 import PromoSection from "../components/Promosection";
+
+import BrandProducts from "../components/BrandProducts";
 
 const Home = () => {
   const [activeCategory, setActiveCategory] = useState("all");
@@ -15,9 +17,13 @@ const Home = () => {
       <CategoryBar active={activeCategory} setActive={setActiveCategory} />
       <Hero category={activeCategory} />
       <PopularBrands activeBrand={activeBrand} setActiveBrand={setActiveBrand} />
-      <Categories />
+
+      {/* Brand Products Section - Only shows when a brand is active */}
+      {activeBrand && <BrandProducts brand={activeBrand} />}
+
+
       <PromoSection />
-      <DiscountedGoods />
+      <DiscountedGoods category={activeCategory} />
     </MainLayout>
   );
 };

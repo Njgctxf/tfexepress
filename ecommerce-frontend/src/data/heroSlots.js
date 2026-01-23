@@ -37,7 +37,7 @@ const heroSlots = {
         image:
           "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04",
         bg: "bg-gray-900",
-        productId: 4, 
+        productId: 4,
       },
     ],
     rightBottom: [
@@ -88,20 +88,9 @@ const heroSlots = {
         title: "Levi's Jeans",
         status: "Disponible",
         image:
-          "https://images.unsplash.com/photo-1549298916-b41d501d3772",
-        bg: "bg-green-500",
-        productId: 9,
-      },
-    ],
-    rightTop: [
-      {
-        badge: "Nouveau",
-        title: "Levi's Jeans",
-        status: "Disponible",
-        image:
           "https://images.unsplash.com/photo-1542272604-787c3835535d",
         bg: "bg-indigo-600",
-        productId: 10,
+        productId: 9,
       },
       {
         badge: "Hot",
@@ -205,7 +194,7 @@ const heroSlots = {
         image:
           "https://images.unsplash.com/photo-1603791440384-56cd371ee9a7",
         bg: "bg-orange-500",
-        productId: 20,  
+        productId: 20,
       },
       {
         badge: "Best Seller",

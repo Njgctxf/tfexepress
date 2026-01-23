@@ -15,21 +15,21 @@ const CategoryPage = () => {
         const data = res.data || [];
         const filtered = data.filter((p) => {
           const productCat = p.category;
-          
+
           // If category is an object
           if (typeof productCat === 'object' && productCat) {
             const catId = productCat.id || productCat._id;
             const catName = productCat.name || productCat.nom;
             const catSlug = productCat.slug;
-            
-            return catId === slug || 
-                   catName?.toLowerCase() === slug.toLowerCase() ||
-                   catSlug?.toLowerCase() === slug.toLowerCase();
+
+            return String(catId) === String(slug) ||
+              catName?.toLowerCase() === slug.toLowerCase() ||
+              catSlug?.toLowerCase() === slug.toLowerCase();
           }
-          
+
           // If category is a string/ID
-          return productCat === slug || 
-                 productCat?.toLowerCase() === slug.toLowerCase();
+          return productCat === slug ||
+            productCat?.toLowerCase() === slug.toLowerCase();
         });
         setProducts(filtered);
       })

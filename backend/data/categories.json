@@ -1,9 +1,5 @@
 [
   {
-    "id": "electronics",
-    "name": "Électronique"
-  },
-  {
     "id": "chaussures",
     "name": "Chaussures"
   },
@@ -20,18 +16,23 @@
     "name": "Vêtements"
   },
   {
-    "_id": "1768017503489",
-    "name": "bonbon",
-    "slug": "bonbon"
+    "id": "cat_1768272025148",
+    "name": "sport",
+    "slug": "sport"
   },
   {
-    "id": "cat_1768183506364",
-    "name": "Test Category",
-    "slug": "test-category"
+    "id": "cat_1768272057480",
+    "name": "cuisine",
+    "slug": "cuisine"
   },
   {
-    "id": "cat_1768183525618",
-    "name": "bb",
-    "slug": "bb"
+    "id": "cat_1768272911861",
+    "name": "parfum",
+    "slug": "parfum"
+  },
+  {
+    "id": "cat_1768304781402",
+    "name": "Telephones",
+    "slug": "telephones"
   }
 ]

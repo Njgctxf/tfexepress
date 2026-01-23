@@ -9,6 +9,7 @@ import { CartProvider } from "./context/CartContext";
 import { FavoritesProvider } from "./context/FavoritesContext";
 import { SearchProvider } from "./context/SearchContext";
 import { AdminUIProvider } from "./admin/context/AdminUIContext";
+import { SiteSettingsProvider } from "./context/SiteSettingsContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -18,7 +19,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <CartProvider>
             <FavoritesProvider>
               <AdminUIProvider>
-                <App />
+                <SiteSettingsProvider>
+                  <App />
+                </SiteSettingsProvider>
               </AdminUIProvider>
             </FavoritesProvider>
           </CartProvider>

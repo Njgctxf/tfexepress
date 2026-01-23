@@ -10,12 +10,11 @@ const PasswordStrength = ({ password }) => {
       {rules.map((rule) => (
         <div key={rule.label} className="flex items-center gap-2 text-sm">
           <span
-            className={`w-2 h-2 rounded-full ${
-              rule.test ? "bg-green-500" : "bg-gray-300"
-            }`}
+            className={`w-2 h-2 rounded-full ${rule.test ? "bg-green-500" : "bg-gray-300"
+              }`}
           />
           <span
-            className={rule.test ? "text-green-600" : "text-gray-400"}
+            className={rule.test ? "text-green-600" : "text-gray-500"}
           >
             {rule.label}
           </span>

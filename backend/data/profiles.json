@@ -9,5 +9,29 @@
     "loyalty_points": 150,
     "loyalty_tier": "Argent",
     "created_at": "2023-01-01T10:00:00Z"
+  },
+  {
+    "id": "usr_1768245795789",
+    "email": "promessekacou733@gmail.com",
+    "full_name": "Promesse Kacou",
+    "phone": "0565255227",
+    "address": "",
+    "city": "",
+    "loyalty_points": 0,
+    "loyalty_tier": "Bronze",
+    "created_at": "2026-01-12T19:23:15.789Z",
+    "zip": ""
+  },
+  {
+    "id": "usr_1768313704940",
+    "email": "promessekacou1@gmail.com",
+    "full_name": "",
+    "phone": "",
+    "address": "",
+    "city": "",
+    "loyalty_points": 0,
+    "loyalty_tier": "Bronze",
+    "created_at": "2026-01-13T14:15:04.940Z",
+    "zip": ""
   }
 ]

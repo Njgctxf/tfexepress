@@ -1,43 +1,74 @@
-const API_URL = "http://localhost:5000/api/categories";
-
-function slugify(text) {
-  return text
-    .toString()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w-]+/g, "");
-}
-
-/* =====================
-   CATEGORIES (Supabase)
-===================== */
+import { supabase } from "../../lib/supabase";
 
 export async function getCategories() {
   try {
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error("Fetch failed");
-      return await res.json();
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name');
+
+    if (error) throw error;
+    return data || [];
   } catch (err) {
-      console.error(err);
-      return [];
+    console.error(err);
+    return [];
   }
 }
 
-export async function createCategory(name) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name })
-  });
-  if (!res.ok) throw new Error("Create failed");
-  return await res.json();
+export async function createCategory(category) {
+  try {
+    // Generate slug from name if not provided
+    const slug = category.slug || category.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+
+    const payload = {
+      name: category.name,
+      slug,
+      icon_key: category.icon_key || 'Grid',
+      is_active: category.is_active !== undefined ? category.is_active : true
+    };
+
+    const { data, error } = await supabase
+      .from('categories')
+      .insert([payload])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.error("Create category error:", err);
+    throw new Error("Create failed");
+  }
+}
+
+export async function updateCategory(id, updates) {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.error("Update category error:", err);
+    throw err;
+  }
 }
 
 export async function deleteCategory(id) {
-  const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Delete failed");
-  return { success: true };
+  try {
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error("Delete category error:", err);
+    throw new Error("Delete failed");
+  }
 }

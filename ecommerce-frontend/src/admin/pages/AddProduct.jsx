@@ -1,9 +1,10 @@
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Tag, DollarSign, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import CategorySelect from "../components/CategorySelect";
 import ImageUpload from "../components/ImageUpload";
 import { createProduct } from "../../services/api";
+import toast from "react-hot-toast";
 
 export default function AddProduct() {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ export default function AddProduct() {
     stock: "",
     category: "",
     description: "",
-    image: null,
+    images: [],
   });
 
   const handleChange = (e) => {
@@ -29,195 +30,214 @@ export default function AddProduct() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    try {
-      const formData = new FormData();
-      formData.append("name", form.name);
-      formData.append("price", form.price);
-      formData.append("stock", form.stock);
-      formData.append("category", form.category);
-      formData.append("description", form.description);
-      if (form.image) {
-        formData.append("image", form.image);
-      }
 
-      await createProduct(formData);
+    try {
+      await createProduct(form);
+      toast.success("Produit ajouté avec succès !");
       navigate("/admin/products");
     } catch (error) {
-      alert("❌ Erreur lors de l'ajout du produit: " + error.message);
+      toast.error("Erreur lors de l'ajout du produit: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 space-y-8">
-{/* HEADER */}
-<div className="flex flex-col gap-4 sm:gap-0 sm:flex-row sm:items-center sm:justify-between">
-  {/* LEFT */}
-  <div>
-    <button
-      onClick={() => navigate(-1)}
-      className="flex items-center gap-1 text-sm text-gray-500 hover:text-black mb-2 p-8"
-    >
-      <ArrowLeft size={16} />
-      Produits
-    </button>
+    <div className="max-w-5xl mx-auto pb-20">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-black hover:border-black transition-all shadow-sm"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              Ajouter un produit
+            </h1>
+            <p className="text-sm text-gray-500">
+              Nouveau produit dans le catalogue
+            </p>
+          </div>
+        </div>
 
-    <h1 className="text-2xl font-semibold text-gray-900">
-      Ajouter un produit
-    </h1>
-    <p className="text-sm text-gray-500">
-      Configurez les informations de votre produit
-    </p>
-  </div>
+        <button
+          form="product-form"
+          type="submit"
+          disabled={loading}
+          className="hidden sm:inline-flex items-center gap-2 bg-black text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition-all shadow-lg shadow-gray-200 hover:shadow-xl hover:-translate-y-0.5"
+        >
+          <Save size={18} />
+          {loading ? "Enregistrement..." : "Enregistrer"}
+        </button>
+      </div>
 
-  {/* RIGHT (DESKTOP ACTION) */}
-  <button
-    form="product-form"
-    type="submit"
-    disabled={loading}
-    className="hidden sm:inline-flex items-center gap-2 bg-black text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
-  >
-    <Save size={16} />
-    {loading ? "Enregistrement..." : "Enregistrer"}
-  </button>
-</div>
-
-      {/* FORM */}
       <form
         id="product-form"
         onSubmit={handleSubmit}
         className="grid grid-cols-1 lg:grid-cols-3 gap-8"
       >
-        {/* LEFT COLUMN */}
         <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <Field
-              label="Nom du produit"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
-            />
+          <Card title="Informations générales">
+            <div className="space-y-4">
+              <Field
+                label="Nom du produit"
+                name="name"
+                placeholder="Ex: Sneakers Nike Air Max"
+                value={form.name}
+                onChange={handleChange}
+                required
+              />
 
-            <Field
-              label="Description"
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              textarea
-            />
+              <Field
+                label="Description"
+                name="description"
+                placeholder="Décrivez votre produit en détail..."
+                value={form.description}
+                onChange={handleChange}
+                textarea
+              />
+            </div>
           </Card>
 
-          <Card>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Card title="Tarification & Stock">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <Field
-                label="Prix (FCFA)"
+                label="Prix"
                 name="price"
                 type="number"
+                placeholder="0.00"
                 value={form.price}
                 onChange={handleChange}
                 required
+                icon={DollarSign}
+                suffix="FCFA"
               />
 
-              <Field
-                label="Quantité en stock"
-                name="stock"
-                type="number"
-                value={form.stock}
-                onChange={handleChange}
-                required
-              />
-            </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field
+                  label="Stock initial"
+                  name="stock"
+                  type="number"
+                  placeholder="0"
+                  value={form.stock}
+                  onChange={handleChange}
+                  required
+                  icon={Package}
+                />
+                <Field
+                  label="Marque"
+                  name="brand"
+                  placeholder="Ex: Nike"
+                  value={form.brand || ""}
+                  onChange={handleChange}
+                  icon={Tag}
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Catégorie
-              </label>
-              <CategorySelect
-                value={form.category}
-                onChange={(val) =>
-                  setForm((prev) => ({ ...prev, category: val }))
-                }
-              />
+              <div className="sm:col-span-2">
+                <Field
+                  label="Tailles ou Pointures (séparées par des virgules)"
+                  name="sizes"
+                  placeholder="Ex: S, M, L ou 40, 41, 42"
+                  value={form.sizes || ""}
+                  onChange={handleChange}
+                  icon={Tag}
+                />
+                <p className="text-xs text-gray-500 mt-1 ml-1">Exemple: S, M, L, XL <strong>ou</strong> 38, 39, 40</p>
+              </div>
             </div>
           </Card>
-
-          {/* DESKTOP SUBMIT BUTTON (BOTTOM) */}
-          <div className="hidden sm:flex justify-end">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2"
-            >
-              <Save size={18} />
-              {loading ? "Enregistrement..." : "Enregistrer le produit"}
-            </button>
-          </div>
         </div>
 
-        {/* RIGHT COLUMN */}
         <div className="space-y-6">
-          <Card>
-            <h3 className="text-sm font-medium mb-3">Image</h3>
-            <ImageUpload
-              value={form.image}
-              onChange={(file) =>
-                setForm((prev) => ({ ...prev, image: file }))
-              }
-            />
-            <p className="text-xs text-gray-500 mt-2">
-              PNG, JPG – max 2MB
-            </p>
+          <Card title="Médias">
+            <div className="p-1">
+              <ImageUpload
+                value={form.images}
+                onChange={(files) =>
+                  setForm((prev) => ({ ...prev, images: files }))
+                }
+                multiple
+              />
+            </div>
+          </Card>
+
+          <Card title="Organisation">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Tag size={16} className="text-gray-400" />
+                  Catégorie
+                </label>
+                <CategorySelect
+                  value={form.category}
+                  onChange={(val) =>
+                    setForm((prev) => ({ ...prev, category: val }))
+                  }
+                />
+              </div>
+            </div>
           </Card>
         </div>
 
-        {/* MOBILE ACTION BAR */}
-        <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-4">
+        <div className="sm:hidden fixed bottom-4 left-4 right-4 z-50">
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white py-3 rounded-lg font-medium disabled:opacity-50"
+            className="w-full bg-black text-white py-3.5 rounded-xl font-bold shadow-xl flex items-center justify-center gap-2 hover:bg-gray-800 transition-all"
           >
-            {loading ? "Enregistrement..." : "Enregistrer le produit"}
+            <Save size={20} />
+            {loading ? "Enregistrement..." : "Enregistrer"}
           </button>
         </div>
-      </form>
-    </div>
+      </form >
+    </div >
   );
 }
 
-/* =====================
-   SHOPIFY-LIKE UI
-===================== */
-
-function Card({ children }) {
+function Card({ children, title }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      {title && <h3 className="text-base font-bold text-gray-900 mb-5">{title}</h3>}
       {children}
     </div>
   );
 }
 
-function Field({ label, textarea, ...props }) {
+function Field({ label, textarea, icon: Icon, suffix, ...props }) {
   return (
     <div>
-      <label className="block text-sm font-medium mb-1">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
         {label}
       </label>
-      {textarea ? (
-        <textarea
-          {...props}
-          rows="4"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:outline-none"
-        />
-      ) : (
-        <input
-          {...props}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-black focus:outline-none"
-        />
-      )}
+      <div className="relative group">
+        {Icon && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors">
+            <Icon size={18} />
+          </div>
+        )}
+
+        {textarea ? (
+          <textarea
+            {...props}
+            rows="5"
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-black transition-all outline-none resize-none"
+          />
+        ) : (
+          <input
+            {...props}
+            className={`w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-black transition-all outline-none ${Icon ? 'pl-10' : 'px-4'} ${suffix ? 'pr-12' : ''}`}
+          />
+        )}
+
+        {suffix && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium pointer-events-none">
+            {suffix}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

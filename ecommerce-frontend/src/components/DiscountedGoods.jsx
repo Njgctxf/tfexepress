@@ -8,10 +8,18 @@ const DiscountedGoods = ({ category = "all", brand = null }) => {
   const [loading, setLoading] = useState(true);
   const scrollRefs = useRef({});
 
+  // Optimization: Render categories progressively to avoid UI freeze
+  const [visibleCategoriesCount, setVisibleCategoriesCount] = useState(2);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await getProducts();
+        // Optimize: Select only needed fields, exclude heavy description
+        // Limit to 500 products to prevent crash if DB has 26k items
+        const res = await getProducts({
+          select: 'id, name, price, images, stock, category:categories(id, name, slug), brand',
+          limit: 500
+        });
         if (res.success) {
           setProducts(res.data);
         }
@@ -24,29 +32,90 @@ const DiscountedGoods = ({ category = "all", brand = null }) => {
     fetchProducts();
   }, []);
 
+  // Progressively show more categories after initial load
+  useEffect(() => {
+    if (!loading && products.length > 0) {
+      const timer = setTimeout(() => {
+        setVisibleCategoriesCount(prev => prev + 5);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, products, visibleCategoriesCount]);
+
+  // Helper to normalize strings for comparison
+  const normalize = (str) => {
+    return String(str || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+  };
+
   /* ================= FILTER PRODUCTS ================= */
   const filteredProducts = useMemo(() => {
+    // Return all products, only filter by brand if needed
+    // We DON'T filter by category here anymore, because we want to show all categories
     return products.filter((product) => {
-      if (category !== "all" && product.category !== category) return false;
+      // 1. Check Brand if needed
       if (brand && product.brand !== brand) return false;
       return true;
     });
-  }, [products, category, brand]);
+  }, [products, brand]);
 
   /* ================= GROUP BY CATEGORY ================= */
   const groupedProducts = useMemo(() => {
     return filteredProducts.reduce((acc, product) => {
-      const categoryName = typeof product.category === 'object' 
-        ? product.category.name 
-        : product.category;
-      
+      // Robust category extraction to prevent crashes
+      let categoryName = "Autres";
+
+      if (product && product.category) {
+        if (product.category && typeof product.category === 'object') {
+          categoryName = product.category.name || "Autres";
+        } else {
+          categoryName = String(product.category);
+        }
+      }
+
       if (!acc[categoryName]) acc[categoryName] = [];
       acc[categoryName].push(product);
       return acc;
     }, {});
   }, [filteredProducts]);
 
-  const orderedCategories = Object.keys(groupedProducts);
+  const orderedCategories = useMemo(() => {
+    const categories = Object.keys(groupedProducts);
+
+    // If no specific category selected or "all", just sort alphabetically or keep default
+    if (!category || category === "all") {
+      return categories.sort();
+    }
+
+    const targetSlug = category; // 'category' prop IS the slug
+
+    return categories.sort((a, b) => {
+      // Find a representative product for category 'a' (Name)
+      const productA = groupedProducts[a]?.[0];
+      const slugA = productA?.category?.slug;
+
+      // Find a representative product for category 'b'
+      const productB = groupedProducts[b]?.[0];
+      const slugB = productB?.category?.slug;
+
+      // Exact slug match gets priority
+      if (slugA === targetSlug) return -1;
+      if (slugB === targetSlug) return 1;
+
+      // Fallback: Fuzzy name match (if slug missing)
+      const targetNameNorm = normalize(category);
+      const matchA = normalize(a).includes(targetNameNorm);
+      const matchB = normalize(b).includes(targetNameNorm);
+
+      if (matchA && !matchB) return -1;
+      if (!matchA && matchB) return 1;
+
+      return a.localeCompare(b); // Otherwise alphabetical
+    });
+  }, [groupedProducts, category]);
 
   const scrollLeft = (cat) => {
     scrollRefs.current[cat]?.scrollBy({ left: -250, behavior: "smooth" });
@@ -78,11 +147,11 @@ const DiscountedGoods = ({ category = "all", brand = null }) => {
     <section className="max-w-7xl mx-auto px-4 mt-14">
 
       {/* CATEGORY SECTIONS */}
-      {orderedCategories.map((cat) => (
+      {orderedCategories.slice(0, visibleCategoriesCount).map((cat) => (
         <div key={cat} className="mb-10">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">
             {cat}
-          </h3>
+          </h2>
 
           <div className="relative">
             {/* LEFT */}
@@ -101,7 +170,9 @@ const DiscountedGoods = ({ category = "all", brand = null }) => {
               style={{ touchAction: "pan-x" }}
             >
               {groupedProducts[cat].map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <div key={product.id} className="min-w-[260px] w-[260px] max-w-[260px]">
+                  <ProductCard product={product} />
+                </div>
               ))}
             </div>
 

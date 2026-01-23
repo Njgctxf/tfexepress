@@ -39,6 +39,9 @@ const Categories = () => {
             <img
               src={item.image.startsWith('http') ? item.image : `http://localhost:5000${item.image}`}
               alt={item.category.name}
+              width="400"
+              height="160"
+              loading="lazy"
               className="h-40 w-full object-cover rounded-xl"
             />
 

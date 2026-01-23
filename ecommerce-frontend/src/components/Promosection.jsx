@@ -31,7 +31,9 @@ const PromoSection = () => {
 
       <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <div key={product.id} className="min-w-[260px] w-[260px] max-w-[260px]">
+            <ProductCard product={product} />
+          </div>
         ))}
       </div>
     </section>

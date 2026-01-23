@@ -5,7 +5,7 @@ const LoadingButton = ({ loading, children }) => {
       className={`
         w-full py-3 rounded-xl font-semibold
         flex items-center justify-center gap-2
-        bg-yellow-400 hover:bg-yellow-500
+        bg-yellow-400 hover:bg-yellow-500 text-black
         disabled:opacity-70 disabled:cursor-not-allowed
       `}
     >

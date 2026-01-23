@@ -11,10 +11,10 @@ export const AuthProvider = ({ children }) => {
     const initAuth = async () => {
       try {
         console.log("DEBUG: AuthProvider initializing...");
-        
+
         // MOCK AUTH IF PLACEHOLDER
         if (!supabase.supabaseUrl || supabase.supabaseUrl.includes("placeholder")) {
-           console.warn("DEBUG: Supabase URL might be invalid or placeholder. Checking session anyway.");
+          console.warn("DEBUG: Supabase URL might be invalid or placeholder. Checking session anyway.");
         }
 
         const { data, error } = await supabase.auth.getSession();
@@ -90,8 +90,16 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const resetPassword = async (email) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/admin/update-password", // Or a dedicated route
+    });
+    if (error) throw error;
+    return data;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, register, login, logout, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

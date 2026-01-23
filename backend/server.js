@@ -11,6 +11,8 @@ import orderRoutes from "./routes/order.routes.js";
 import statsRoutes from "./routes/stats.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
+import returnRoutes from "./routes/return.routes.js";
+
 
 /* ===== ENV ===== */
 dotenv.config();
@@ -31,7 +33,8 @@ app.use(
   })
 );
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* ===== HEALTH CHECK ===== */
@@ -56,11 +59,13 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/returns", returnRoutes);
+
 
 /* ===== SERVER ===== */
 app.listen(PORT, () => {
   console.log(`✅ Backend lancé sur http://localhost:${PORT}`);
   console.log(`🌍 CORS autorisé pour ${FRONTEND_URL}`);
-  console.log("🔄 Server reloaded via Antigravity");
+  console.log("🔄 Server reloaded via Antigravity - " + new Date().toISOString());
 });
 

@@ -1,93 +1,78 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import { useFavorites } from "../context/FavoritesContext";
 import { useCart } from "../context/CartContext";
 import MainLayout from "../layout/MainLayout";
-import { ShoppingCart, Trash2 } from "lucide-react";
+import ProductCard from "../components/ProductCard";
+import { Heart, ArrowRight, ShoppingBag } from "lucide-react";
 
 const FavoritesPage = () => {
   const { favorites, toggleFavorite } = useFavorites();
   const { addToCart } = useCart();
 
+  const handleAddAllToCart = () => {
+    favorites.forEach((product) => addToCart(product));
+  };
+
+  if (favorites.length === 0) {
+    return (
+      <MainLayout>
+        <div className="min-h-[60vh] flex flex-col items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-red-50 p-6 rounded-full mb-6">
+            <Heart size={48} className="text-red-500 fill-red-500" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">
+            Votre liste d'envies est vide
+          </h1>
+          <p className="text-gray-500 mb-8 text-center max-w-md">
+            Sauvegardez vos coups de cœur ici pour les retrouver plus tard.
+            Parcourez la boutique pour commencer.
+          </p>
+          <Link
+            to="/shop"
+            className="bg-black text-white px-8 py-4 rounded-lg font-bold hover:bg-gray-900 transition-all transform hover:scale-105 flex items-center gap-2"
+          >
+            Découvrir nos collections
+            <ArrowRight size={20} />
+          </Link>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 py-10">
+      <div className="max-w-7xl mx-auto px-4 py-12 lg:py-20">
         {/* HEADER */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold">
-            Mes favoris ({favorites.length})
-          </h1>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-gray-100 pb-6">
+          <div>
+            <Link to="/shop" className="text-sm text-gray-500 hover:text-black flex items-center gap-1 mb-2 transition-colors">
+              <ArrowRight size={14} className="rotate-180" />
+              Retour à la boutique
+            </Link>
+            <h1 className="text-3xl lg:text-4xl font-black tracking-tight text-gray-900 mb-2">
+              Ma Liste d'Envies
+            </h1>
+            <p className="text-gray-500">
+              {favorites.length} article{favorites.length > 1 ? "s" : ""} sauvegardé{favorites.length > 1 ? "s" : ""}
+            </p>
+          </div>
 
-          {favorites.length > 0 && (
-            <button
-              onClick={() => {
-                favorites.forEach((product) => addToCart(product));
-              }}
-              className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-full text-sm font-semibold"
-            >
-              Tout ajouter au panier
-            </button>
-          )}
+          <button
+            onClick={handleAddAllToCart}
+            className="bg-black text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-900 transition-all shadow-lg shadow-gray-200 flex items-center gap-2"
+          >
+            <ShoppingBag size={20} />
+            Tout ajouter au panier
+          </button>
         </div>
 
-        {/* EMPTY STATE */}
-        {favorites.length === 0 && (
-          <div className="text-center py-20 text-gray-500">
-            <p className="text-lg mb-4">Aucun produit en favoris</p>
-            <Link
-              to="/"
-              className="inline-block bg-black text-white px-6 py-2 rounded-full text-sm"
-            >
-              Continuer vos achats
-            </Link>
-          </div>
-        )}
-
         {/* GRID */}
-        {favorites.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-            {favorites.map((product) => (
-              <div
-                key={product.id}
-                className="border rounded-xl p-4 hover:shadow-md transition"
-              >
-                <Link to={`/product/${product.id}`}>
-                  <img
-                    src={product.images?.[0]}
-                    alt={product.name}
-                    className="w-full h-40 object-contain mb-4"
-                  />
-                </Link>
-
-                <h3 className="text-sm font-semibold line-clamp-2">
-                  {product.name}
-                </h3>
-
-                <p className="text-red-500 font-bold mt-2">
-                  {product.price.toLocaleString()} FCFA
-                </p>
-
-                {/* ACTIONS */}
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={() => addToCart(product)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-black text-white py-2 rounded-lg text-sm"
-                  >
-                    <ShoppingCart size={16} />
-                    Panier
-                  </button>
-
-                  <button
-                    onClick={() => toggleFavorite(product)}
-                    className="w-10 h-10 flex items-center justify-center border rounded-lg hover:bg-gray-100"
-                    title="Retirer des favoris"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+          {favorites.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
       </div>
     </MainLayout>
   );
