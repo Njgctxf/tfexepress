@@ -1,5 +1,9 @@
 import { supabase } from "../../lib/supabase";
+import { sendOrderEmail } from "../email/emailjs.service";
 
+/**
+ * Récupère les commandes d'un utilisateur
+ */
 export async function getMyOrders(email) {
   if (!email) return [];
 
@@ -17,6 +21,9 @@ export async function getMyOrders(email) {
   return data;
 }
 
+/**
+ * Crée une commande et gère la fidélité + email
+ */
 export async function createOrder(orderData) {
   try {
     const {
@@ -37,7 +44,7 @@ export async function createOrder(orderData) {
       throw new Error("Panier vide");
     }
 
-    // 1. Insert into 'orders' table
+    // 1. Insertion dans la table 'orders'
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert([
@@ -60,7 +67,7 @@ export async function createOrder(orderData) {
 
     if (orderError) throw orderError;
 
-    // 2. Insert 'order_items'
+    // 2. Insertion des 'order_items'
     const orderItems = items.map((item) => ({
       order_id: order.id,
       product_id: item.product_id || item.id,
@@ -78,7 +85,7 @@ export async function createOrder(orderData) {
 
     if (itemsError) throw itemsError;
 
-    // 3. Update Loyalty Points
+    // 3. Mise à jour des points de fidélité
     if (user_id && (points_used > 0 || points_earned > 0)) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -98,6 +105,11 @@ export async function createOrder(orderData) {
       }
     }
 
+    // 4. Envoi de l'email de confirmation (Asynchrone)
+    sendOrderEmail({ ...order, items: orderItems }).catch(err => 
+      console.error("EmailJS Error:", err)
+    );
+
     return { ...order, items: orderItems };
   } catch (error) {
     console.error("Error creating order:", error);
@@ -105,6 +117,9 @@ export async function createOrder(orderData) {
   }
 }
 
+/**
+ * Met à jour une commande (Admin)
+ */
 export async function updateOrder(id, updates) {
   const { data, error } = await supabase
     .from("orders")
