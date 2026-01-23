@@ -12,6 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSiteSettings } from "../context/SiteSettingsContext";
+import { useLocalization } from "../context/LocalizationContext";
 import { getCategories } from "../services/api/categories.api";
 
 const TiktokIcon = ({ className }) => (
@@ -68,6 +69,7 @@ const Footer = () => {
     facebook, instagram, tiktok,
     youtube, twitter, linkedin, pinterest, snapchat
   } = useSiteSettings();
+  const { t } = useLocalization();
 
   const [categories, setCategories] = useState([]);
 
@@ -78,50 +80,40 @@ const Footer = () => {
   return (
     <footer className="bg-gray-100 text-gray-700 mt-10 md:mt-20">
 
-      {/* TOP INFO */}
       <div className="border-b bg-white">
         <div className="max-w-7xl mx-auto px-6 py-6 md:py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
 
           <div className="flex items-center gap-3">
             <Truck className="text-red-500 shrink-0" />
-            <span>Livraison rapide partout</span>
+            <span>{t('fast_delivery')}</span>
           </div>
 
           <div className="flex items-center gap-3">
             <ShieldCheck className="text-red-500 shrink-0" />
-            <span>Paiement 100% sécurisé</span>
+            <span>{t('secure_payment')}</span>
           </div>
 
           <div className="flex items-center gap-3">
             <CreditCard className="text-red-500 shrink-0" />
-            <span>Mobile Money & Cartes</span>
+            <span>{t('payment_methods_mobile')}</span>
           </div>
 
           <div className="flex items-center gap-3">
             <Headphones className="text-red-500 shrink-0" />
-            <span>Support client 7j/7</span>
+            <span>{t('customer_support')}</span>
           </div>
 
         </div>
       </div>
 
-      {/* MAIN FOOTER */}
       <div className="max-w-7xl mx-auto px-6 py-8 md:py-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 md:gap-10">
 
-        {/* À PROPOS */}
         <div className="lg:col-span-2">
           <h2 className="text-2xl font-bold text-gray-900">{siteName || "TFExpress"}</h2>
           <p className="mt-4 text-sm leading-relaxed text-gray-600">
-            {siteName || "TFExpress"} est une marketplace en ligne qui vous permet d’acheter
-            facilement des produits authentiques : électronique, mode,
-            sport, beauté, maison et bien plus encore.
-          </p>
-          <p className="mt-2 text-sm text-gray-600">
-            Notre mission est de connecter les meilleurs vendeurs aux clients,
-            avec des prix compétitifs et un service fiable.
+            {siteName || "TFExpress"} {t('footer_mission')}
           </p>
 
-          {/* SOCIAL */}
           <div className="flex gap-4 mt-5">
             {facebook && (
               <a href={facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
@@ -166,36 +158,33 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* ACHETER */}
         <div>
           <h3 className="font-semibold text-gray-900 mb-4">
-            Acheter sur {siteName || "TFExpress"}
+            {t('buy_on')} {siteName || "TFExpress"}
           </h3>
           <ul className="space-y-2 text-sm">
-            <li><Link to="/help" className="hover:text-red-500 cursor-pointer">Comment commander</Link></li>
-            <li><Link to="/register" className="hover:text-red-500 cursor-pointer">Créer un compte</Link></li>
-            <li><Link to="/help" className="hover:text-red-500 cursor-pointer">Modes de paiement</Link></li>
-            <li><Link to="/dashboard" className="hover:text-red-500 cursor-pointer">Suivi de commande</Link></li>
+            <li><Link to="/help" className="hover:text-red-500 cursor-pointer">{t('how_to_order')}</Link></li>
+            <li><Link to="/register" className="hover:text-red-500 cursor-pointer">{t('create_account')}</Link></li>
+            <li><Link to="/help" className="hover:text-red-500 cursor-pointer">{t('payment_methods')}</Link></li>
+            <li><Link to="/dashboard" className="hover:text-red-500 cursor-pointer">{t('order_tracking')}</Link></li>
           </ul>
         </div>
 
-        {/* AIDE */}
         <div>
           <h3 className="font-semibold text-gray-900 mb-4">
-            Services & Aide
+            {t('services_help')}
           </h3>
           <ul className="space-y-2 text-sm">
-            <li><Link to="/help" className="hover:text-red-500 cursor-pointer">Centre d’aide</Link></li>
-            <li><Link to="/help" className="hover:text-red-500 cursor-pointer">Retours & remboursements</Link></li>
-            <li><Link to="/terms" className="hover:text-red-500 cursor-pointer">Conditions d’utilisation</Link></li>
-            <li><Link to="/privacy" className="hover:text-red-500 cursor-pointer">Politique de confidentialité</Link></li>
+            <li><Link to="/help" className="hover:text-red-500 cursor-pointer">{t('help_center')}</Link></li>
+            <li><Link to="/help" className="hover:text-red-500 cursor-pointer">{t('returns_refunds')}</Link></li>
+            <li><Link to="/terms" className="hover:text-red-500 cursor-pointer">{t('terms_of_use')}</Link></li>
+            <li><Link to="/privacy" className="hover:text-red-500 cursor-pointer">{t('privacy_policy')}</Link></li>
           </ul>
         </div>
 
-        {/* CATÉGORIES */}
         <div>
           <h3 className="font-semibold text-gray-900 mb-4">
-            Catégories populaires
+            {t('popular_categories')}
           </h3>
           <ul className="space-y-2 text-sm">
             {categories.slice(0, 5).map(cat => (
@@ -210,11 +199,10 @@ const Footer = () => {
 
       </div>
 
-      {/* BOTTOM */}
       <div className="bg-gray-900 text-gray-300 text-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
           <span>
-            © {new Date().getFullYear()} {siteName || "TFExpress"}. Tous droits réservés.
+            © {new Date().getFullYear()} {siteName || "TFExpress"}. {t('all_rights_reserved')}
           </span>
           <div className="text-right text-xs">
             {siteAddress && <p>{siteAddress}</p>}

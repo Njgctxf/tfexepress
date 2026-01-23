@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getBanners } from "../services/api/banners.api";
+import { useLocalization } from "../context/LocalizationContext";
 
 /* ---------- DOTS ---------- */
 const Dots = ({ count, active }) => {
@@ -21,6 +22,7 @@ const Dots = ({ count, active }) => {
 /* ---------- HERO ---------- */
 const Hero = ({ category = "all" }) => {
   const navigate = useNavigate();
+  const { t } = useLocalization();
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,11 +36,15 @@ const Hero = ({ category = "all" }) => {
   useEffect(() => {
     getBanners()
       .then((data) => {
+        // Optionnel : On peut aussi filtrer ici, mais le useMemo s'en occupe
         setBanners(data);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  // On récupère la langue actuelle (fr, en, etc.)
+  const { language } = useLocalization();
 
   // Filter and organize banners for the Hero slots
   const categorySlots = useMemo(() => {
@@ -60,11 +66,15 @@ const Hero = ({ category = "all" }) => {
       };
 
       const target = toSlug(category);
-      // We check if the slugified banner key matches, OR if exact match (legacy)
-      const matched = banners.filter(b => toSlug(b.category_key) === target || b.category_key === category);
-      if (matched.length > 0) filtered = matched;
-      // else fallback to all active banners or generic ones if we had them
+      // On filtre par catégorie
+      filtered = banners.filter(b => toSlug(b.category_key) === target || b.category_key === category);
     }
+
+    // 1.5. Filtrer par LANGUE
+    // On affiche les bannières de la langue actuelle OU celles marquées 'all'
+    filtered = filtered.filter(b => b.language === language || b.language === 'all');
+
+    if (filtered.length === 0) return { main: [], rightTop: [], rightBottom: [] };
 
     // Helper to format/validate
     const formatBanner = (b) => {
@@ -118,11 +128,13 @@ const Hero = ({ category = "all" }) => {
   }, [categorySlots]);
 
   // Reset indices when category changes
-  useEffect(() => {
+  const [prevCategory, setPrevCategory] = useState(category);
+  if (category !== prevCategory) {
     setMainIndex(0);
     setTopIndex(0);
     setBottomIndex(0);
-  }, [category]);
+    setPrevCategory(category);
+  }
 
   if (loading) {
     return (
@@ -193,7 +205,7 @@ const Hero = ({ category = "all" }) => {
                 }}
                 className="mt-4 md:mt-8 bg-black/80 hover:bg-black text-white px-6 py-2 md:px-8 md:py-3 rounded-full font-semibold text-sm md:text-base transition"
               >
-                Commander
+                {t('order_now') || 'Commander'}
               </button>
 
               {categorySlots.main.length > 1 && <Dots count={categorySlots.main.length} active={mainIndex} />}

@@ -17,14 +17,14 @@ import {
 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useLocalization } from "../context/LocalizationContext";
 import { supabase } from "../lib/supabase";
-import { createOrder } from "../services/api";
-
-
+import { createOrder, initiateJekoPayment } from "../services/api";
 
 const Checkout = () => {
   const { cart, totalPrice, subTotal, discount, clearCart, loyaltyAmount, usePoints } = useCart();
   const { user } = useAuth();
+  const { formatPrice, t } = useLocalization();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1); // 1: Info, 2: Shipping, 3: Payment, 4: Success
@@ -170,7 +170,7 @@ const Checkout = () => {
 
       // CALL BACKEND API
       // This ensures emails are sent and business logic is centralized
-      await createOrder({
+      const order = await createOrder({
         user_id: user?.id || null,
         user_email: formData.email,
         items: cart.map(item => ({
@@ -194,6 +194,21 @@ const Checkout = () => {
           initial_subtotal: subTotal
         }
       });
+
+      // --- LOGIQUE JEKO ---
+      if (paymentMethod === 'card' || paymentMethod === 'mobile') {
+        const paymentRes = await initiateJekoPayment(
+          order.id, 
+          finalTotal, 
+          formData.email
+        );
+        
+        if (paymentRes.success && paymentRes.checkoutUrl) {
+          // Rediriger vers Jeko
+          window.location.href = paymentRes.checkoutUrl;
+          return; // Stop ici, la redirection va vider le panier via le webhook ou au retour
+        }
+      }
 
       setStep(4);
       clearCart();
@@ -232,11 +247,11 @@ const Checkout = () => {
 
   const Breadcrumbs = () => (
     <div className="flex items-center text-xs md:text-sm font-medium mb-8">
-      <button onClick={() => setStep(1)} className={`${step === 1 ? 'text-black font-bold' : 'text-orange-500'}`}>Information</button>
+      <button onClick={() => setStep(1)} className={`${step === 1 ? 'text-black font-bold' : 'text-orange-500'}`}>{t('contact_info')}</button>
       <ChevronRight size={14} className="mx-2 text-gray-400" />
-      <button onClick={() => step > 1 && setStep(2)} disabled={step < 2} className={`${step === 2 ? 'text-black font-bold' : step > 2 ? 'text-orange-500' : 'text-gray-400'}`}>Livraison</button>
+      <button onClick={() => step > 1 && setStep(2)} disabled={step < 2} className={`${step === 2 ? 'text-black font-bold' : step > 2 ? 'text-orange-500' : 'text-gray-400'}`}>{t('shipping_method')}</button>
       <ChevronRight size={14} className="mx-2 text-gray-400" />
-      <button onClick={() => step > 2 && setStep(3)} disabled={step < 3} className={`${step === 3 ? 'text-black font-bold' : step > 3 ? 'text-orange-500' : 'text-gray-400'}`}>Paiement</button>
+      <button onClick={() => step > 2 && setStep(3)} disabled={step < 3} className={`${step === 3 ? 'text-black font-bold' : step > 3 ? 'text-orange-500' : 'text-gray-400'}`}>{t('payment')}</button>
     </div>
   );
 
@@ -259,6 +274,25 @@ const Checkout = () => {
     </div>
   );
 
+  const OrderSummaryItemLocalized = ({ item }) => (
+    <div className="flex gap-4 items-center">
+      <div className="relative w-16 h-16 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+        <img src={item.image || item.images?.[0] || "/placeholder.png"} alt={item.name} className="w-full h-full object-contain p-1" />
+        <span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+          {item.qty}
+        </span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+        <p className="text-xs text-gray-500">
+          {item.size && <span className="mr-2 font-bold text-black border border-gray-200 px-1 rounded-sm">{t('size')}: {item.size}</span>}
+          {item.variant || "Standard"}
+        </p>
+      </div>
+      <p className="text-sm font-medium text-gray-900">{formatPrice(item.price * item.qty)}</p>
+    </div>
+  );
+
   // --- MAIN LAYOUT ---
 
   if (step === 4) {
@@ -268,9 +302,9 @@ const Checkout = () => {
           <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <ShieldCheck size={40} />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Commande Confirmée !</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('order_confirmed')}</h2>
           <p className="text-gray-500 mb-8">Merci pour votre achat. Vous recevrez un email de confirmation dans quelques instants.</p>
-          <Link to="/" className="block w-full bg-black text-white py-4 rounded-xl font-bold">Retour à la boutique</Link>
+          <Link to="/" className="block w-full bg-black text-white py-4 rounded-xl font-bold">{t('shop')}</Link>
         </div>
       </div>
     )
@@ -288,14 +322,14 @@ const Checkout = () => {
             <Link to="/" className="text-2xl font-black tracking-tighter">TFExpress</Link>
             <Link to="/cart" replace className="text-sm font-medium text-gray-500 hover:text-black flex items-center gap-2">
               <ArrowLeft size={16} />
-              Retour au panier
+              {t('back_to_cart')}
             </Link>
           </div>
 
           {/* Mobile Header with Back Toggle */}
           <div className="lg:hidden flex items-center justify-between mb-6">
             <Link to="/" className="text-xl font-black tracking-tighter">TFExpress</Link>
-            <Link to="/cart" replace className="text-sm font-medium text-orange-600">Retour au panier</Link>
+            <Link to="/cart" replace className="text-sm font-medium text-orange-600">{t('back_to_cart')}</Link>
           </div>
 
           <Breadcrumbs />
@@ -304,12 +338,12 @@ const Checkout = () => {
           {step === 1 && (
             <div className="space-y-6 animate-fadeIn">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-medium">Coordonnées</h2>
-                {!user && <Link to="/login" className="text-sm text-orange-600 hover:underline">Déjà un compte ? Se connecter</Link>}
+                <h2 className="text-xl font-medium">{t('contact_info')}</h2>
+                {!user && <Link to="/login" className="text-sm text-orange-600 hover:underline">{t('already_have_account')}</Link>}
               </div>
 
               <div className="space-y-4">
-                {renderField("email", "Adresse e-mail", "email")}
+                {renderField("email", t('email_address'), "email")}
 
                 <div className="flex items-center gap-2">
                   <input
@@ -321,19 +355,19 @@ const Checkout = () => {
                 </div>
               </div>
 
-              <h2 className="text-xl font-medium mt-8 mb-4">Adresse de livraison</h2>
+              <h2 className="text-xl font-medium mt-8 mb-4">{t('shipping_address')}</h2>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  {renderField("firstName", "Prénom")}
-                  {renderField("lastName", "Nom")}
+                  {renderField("firstName", t('first_name'))}
+                  {renderField("lastName", t('last_name'))}
                 </div>
 
-                {renderField("address", "Adresse (Numéro, Rue)")}
+                {renderField("address", t('address_placeholder'))}
                 {renderField("apartment", "Appartement, suite, etc. (optionnel)")}
 
                 <div className="grid grid-cols-2 gap-3">
-                  {renderField("city", "Ville")}
-                  {renderField("phone", "Téléphone")}
+                  {renderField("city", t('city'))}
+                  {renderField("phone", t('phone'))}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -345,7 +379,7 @@ const Checkout = () => {
                     checked={formData.saveInfo}
                     onChange={handleInputChange}
                   />
-                  <label htmlFor="saveInfo" className="text-sm text-gray-600">Sauvegarder mes informations pour la prochaine fois</label>
+                  <label htmlFor="saveInfo" className="text-sm text-gray-600">{t('save_info')}</label>
                 </div>
               </div>
             </div>
@@ -389,7 +423,7 @@ const Checkout = () => {
                 </button>
               </div>
 
-              <h2 className="text-xl font-medium">Mode de livraison</h2>
+              <h2 className="text-xl font-medium">{t('shipping_method')}</h2>
               <div className={`border rounded-lg overflow-hidden ${errors.shippingMethod ? 'border-red-500' : 'border-gray-200'}`}>
 
                 {/* ABIDJAN OPTIONS */}
@@ -406,9 +440,9 @@ const Checkout = () => {
                         <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${shippingMethod === 'standard' ? 'border-orange-600' : 'border-gray-300'}`}>
                           {shippingMethod === 'standard' && <div className="w-2 h-2 rounded-full bg-orange-600" />}
                         </div>
-                        <span className="text-sm font-medium">Standard (2-4 jours)</span>
+                        <span className="text-sm font-medium">{t('standard_shipping')} (2-4 jours)</span>
                       </div>
-                      <span className="text-sm font-medium">{shippingRates.standard.toLocaleString()} F</span>
+                      <span className="text-sm font-medium">{formatPrice(shippingRates.standard)}</span>
                     </div>
                     <div className="border-t border-gray-200"></div>
                     <div
@@ -422,9 +456,9 @@ const Checkout = () => {
                         <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${shippingMethod === 'express' ? 'border-orange-600' : 'border-gray-300'}`}>
                           {shippingMethod === 'express' && <div className="w-2 h-2 rounded-full bg-orange-600" />}
                         </div>
-                        <span className="text-sm font-medium">Express (24h)</span>
+                        <span className="text-sm font-medium">{t('express_shipping')} (24h)</span>
                       </div>
-                      <span className="text-sm font-medium">{shippingRates.express.toLocaleString()} F</span>
+                      <span className="text-sm font-medium">{formatPrice(shippingRates.express)}</span>
                     </div>
                   </>
                 )}
@@ -525,7 +559,7 @@ const Checkout = () => {
                   <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'card' ? 'border-black' : 'border-gray-300'}`}>
                     {paymentMethod === 'card' && <div className="w-2 h-2 rounded-full bg-black" />}
                   </div>
-                  <span className="text-sm font-medium flex-1">Carte Bancaire (Visa, Mastercard)</span>
+                  <span className="text-sm font-medium flex-1">Carte Bancaire (via Jeko)</span>
                   <CreditCard size={20} className="text-gray-600" />
                 </div>
                 <div
@@ -538,8 +572,11 @@ const Checkout = () => {
                   <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'mobile' ? 'border-black' : 'border-gray-300'}`}>
                     {paymentMethod === 'mobile' && <div className="w-2 h-2 rounded-full bg-black" />}
                   </div>
-                  <span className="text-sm font-medium flex-1">Mobile Money (Orange, MTN, Wave)</span>
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Orange_logo.svg/1200px-Orange_logo.svg.png" className="h-4" alt="Orange" />
+                  <span className="text-sm font-medium flex-1">Mobile Money (via Jeko)</span>
+                  <div className="flex gap-1 items-center">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Wave_Logo.svg/1200px-Wave_Logo.svg.png" className="h-4" alt="Wave" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Orange_logo.svg/1200px-Orange_logo.svg.png" className="h-4" alt="Orange" />
+                  </div>
                 </div>
                 <div
                   className={`flex items-center p-4 cursor-pointer gap-3 border-t border-gray-200 ${paymentMethod === 'cod' ? 'bg-gray-50' : ''}`}
@@ -574,9 +611,9 @@ const Checkout = () => {
             <button
               onClick={handleNextStep}
               className="bg-black hover:bg-gray-800 text-white font-bold py-4 px-8 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-wait"
-              disabled={loading}
+               disabled={loading}
             >
-              {loading ? 'Chargement...' : step === 3 ? 'Payer maintenant' : 'Continuer'}
+              {loading ? (t('loading') || '...') : step === 3 ? t('pay_now') : t('continue')}
             </button>
           </div>
 
@@ -594,10 +631,10 @@ const Checkout = () => {
         {/* Mobile Summary Toggle */}
         <div className="lg:hidden p-5 border-b border-gray-100 bg-white flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors" onClick={() => setShowOrderSummary(!showOrderSummary)}>
           <div className="flex items-center gap-2 text-sm text-gray-900 font-medium">
-            <span className="text-gray-500">{showOrderSummary ? 'Masquer le sommaire' : 'Afficher le sommaire'}</span>
+            <span className="text-gray-500">{showOrderSummary ? t('order_summary_hide') : t('order_summary_show')}</span>
             {showOrderSummary ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
           </div>
-          <span className="font-bold text-lg tracking-tight">{totalPrice.toLocaleString()} F</span>
+          <span className="font-bold text-lg tracking-tight">{formatPrice(totalPrice)}</span>
         </div>
 
         {/* Desktop & Mobile Expanded Content */}
@@ -608,24 +645,24 @@ const Checkout = () => {
           <div className="p-6 md:p-12 max-w-lg">
             <div className="space-y-4 mb-6">
               {cart.map(item => (
-                <OrderSummaryItem key={item.cartId || item.id} item={item} />
+                <OrderSummaryItemLocalized key={item.cartId || item.id} item={item} />
               ))}
             </div>
 
             <div className="border-t border-gray-200 pt-6 space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Sous-total</span>
-                <span className="font-medium text-gray-900">{subTotal.toLocaleString()} F</span>
+                <span className="text-gray-600">{t('subtotal')}</span>
+                <span className="font-medium text-gray-900">{formatPrice(subTotal)}</span>
               </div>
 
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Expédition</span>
+                <span className="text-gray-600">{t('shipping')}</span>
                 <span className="text-gray-500 text-xs">
-                  {shippingMethod === 'standard' ? `${shippingRates.standard.toLocaleString()} F` :
-                    shippingMethod === 'express' ? `${shippingRates.express.toLocaleString()} F` :
-                      shippingMethod === 'national' ? `${shippingRates.national.toLocaleString()} F` :
-                        shippingMethod === 'international_air' ? `${shippingRates.internationalAir.toLocaleString()} F` :
-                          shippingMethod === 'international_sea' ? `${shippingRates.internationalSea.toLocaleString()} F` : '-'}
+                  {shippingMethod === 'standard' ? formatPrice(shippingRates.standard) :
+                    shippingMethod === 'express' ? formatPrice(shippingRates.express) :
+                      shippingMethod === 'national' ? formatPrice(shippingRates.national) :
+                        shippingMethod === 'international_air' ? formatPrice(shippingRates.internationalAir) :
+                          shippingMethod === 'international_sea' ? formatPrice(shippingRates.internationalSea) : '-'}
                 </span>
               </div>
 
@@ -634,7 +671,7 @@ const Checkout = () => {
               {discount && (
                 <div className="flex justify-between items-center text-green-600 font-medium text-sm animate-in fade-in slide-in-from-right-4">
                   <span className="flex items-center gap-1"><Ticket size={14} /> Remise ({discount.code})</span>
-                  <span>- {((subTotal * discount.percent) / 100).toLocaleString()} F</span>
+                  <span>- {formatPrice((subTotal * discount.percent) / 100)}</span>
                 </div>
               )}
 
@@ -642,40 +679,31 @@ const Checkout = () => {
               {usePoints && (loyaltyAmount || 0) > 0 && (
                 <div className="flex justify-between items-center text-indigo-600 font-medium text-sm animate-in fade-in slide-in-from-right-4">
                   <span className="flex items-center gap-1"><Sparkles size={14} /> Points Fidélité</span>
-                  <span>- {(loyaltyAmount || 0).toLocaleString()} F</span>
+                  <span>- {formatPrice(loyaltyAmount || 0)}</span>
                 </div>
               )}
             </div>
 
             <div className="border-t border-gray-200 mt-6 pt-6 mb-6">
               <div className="flex justify-between items-center">
-                <span className="text-lg font-medium text-gray-900">Total</span>
+                <span className="text-lg font-medium text-gray-900">{t('total')}</span>
                 <div className="text-right">
                   {/* Strikethrough Display if Discounted */}
                   {(discount || usePoints) && (
                     <span className="block text-xs text-gray-400 line-through decoration-red-500/50 mb-1">
-                      {(subTotal + (
+                      {formatPrice(subTotal + (
                         shippingMethod === 'standard' ? shippingRates.standard :
                           shippingMethod === 'express' ? shippingRates.express :
                             shippingMethod === 'national' ? shippingRates.national :
                               shippingMethod === 'international_air' ? shippingRates.internationalAir :
                                 shippingMethod === 'international_sea' ? shippingRates.internationalSea : 0)
-                      ).toLocaleString()} F
+                      )}
                     </span>
                   )}
                   <div className="flex items-baseline gap-2 justify-end">
-                    <span className="text-xs text-gray-500">XOF</span>
+                    <span className="text-xs text-gray-500">{t('currency') || 'XOF'}</span>
                     <span className="text-2xl font-black text-gray-900">
-                      {/* TotalPrice includes discounts, just add shipping */}
-                      {(totalPrice
-                        + (
-                          shippingMethod === 'standard' ? shippingRates.standard :
-                            shippingMethod === 'express' ? shippingRates.express :
-                              shippingMethod === 'national' ? shippingRates.national :
-                                shippingMethod === 'international_air' ? shippingRates.internationalAir :
-                                  shippingMethod === 'international_sea' ? shippingRates.internationalSea : 0)
-                      ).toLocaleString()
-                      } F
+                      {formatPrice(totalPrice + (shippingZone === 'abidjan' ? (shippingMethod === 'standard' ? shippingRates.standard : shippingRates.express) : shippingZone === 'national' ? shippingRates.national : (intlMethod === 'air' ? shippingRates.internationalAir : shippingRates.internationalSea)))}
                     </span>
                   </div>
                 </div>

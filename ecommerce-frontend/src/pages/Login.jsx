@@ -7,9 +7,11 @@ import LoadingButton from "../components/LoadingButton";
 import AuthError from "../components/AuthError";
 import OAuthButtons from "../components/OAuthButtons";
 import { useAuth } from "../context/AuthContext";
+import { useLocalization } from "../context/LocalizationContext";
 
 const Login = () => {
   const { login, user } = useAuth();
+  const { t } = useLocalization();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -17,7 +19,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ✅ REDIRECTION AUTOMATIQUE QUAND CONNECTÉ
   useEffect(() => {
     if (user) {
       navigate("/", { replace: true });
@@ -31,8 +32,6 @@ const Login = () => {
 
     try {
       await login(email, password);
-      // ❌ pas de navigate ici
-      // le useEffect(user) gère la redirection
     } catch (err) {
       setError(err.message || "Erreur de connexion");
     } finally {
@@ -43,27 +42,25 @@ const Login = () => {
   return (
     <AuthLayout>
       <h1 className="text-2xl font-extrabold mb-1">
-        Bon retour 👋
+        {t('login_title')}
       </h1>
       <p className="text-gray-500 mb-6">
-        Connectez-vous à votre compte
+        {t('login_subtitle')}
       </p>
 
-      {/* OAUTH */}
       <OAuthButtons />
 
       <div className="my-6 text-center text-gray-400 text-sm">
         ou
       </div>
 
-      {/* FORM */}
       <form onSubmit={handleLogin} className="space-y-4">
         <AuthError message={error} />
 
         <AuthInput
           icon={Mail}
           type="email"
-          placeholder="Adresse email"
+          placeholder={t('email_label')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -72,7 +69,7 @@ const Login = () => {
         <AuthInput
           icon={Lock}
           type="password"
-          placeholder="Mot de passe"
+          placeholder={t('password_label')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           showToggle
@@ -80,17 +77,17 @@ const Login = () => {
         />
 
         <LoadingButton loading={loading}>
-          Se connecter
+          {t('login_button')}
         </LoadingButton>
       </form>
 
       <p className="text-sm text-center mt-6">
-        Pas encore de compte ?{" "}
+        {t('no_account')}{" "}
         <Link
           to="/register"
-          className="text-blue-500 font-medium hover:underline"
+          className="text-orange-500 font-medium hover:underline"
         >
-          Créer un compte
+          {t('create_account')}
         </Link>
       </p>
     </AuthLayout>

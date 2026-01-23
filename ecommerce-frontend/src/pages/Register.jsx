@@ -7,9 +7,11 @@ import LoadingButton from "../components/LoadingButton";
 import AuthError from "../components/AuthError";
 import OAuthButtons from "../components/OAuthButtons";
 import { useAuth } from "../context/AuthContext";
+import { useLocalization } from "../context/LocalizationContext";
 
 const Register = () => {
   const { register, user } = useAuth();
+  const { t } = useLocalization();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -18,7 +20,6 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ✅ REDIRECTION AUTOMATIQUE APRÈS CRÉATION
   useEffect(() => {
     if (user) {
       navigate("/", { replace: true });
@@ -30,7 +31,7 @@ const Register = () => {
     setError("");
 
     if (password !== confirm) {
-      setError("Les mots de passe ne correspondent pas");
+      setError(t('passwords_dont_match'));
       return;
     }
 
@@ -40,26 +41,24 @@ const Register = () => {
       const res = await register(email, password);
       
       if (res?.requiresConfirmation) {
-        setError("Compte créé ! Veuillez vérifier votre email pour confirmer.");
-        setLoading(false); // Stop loading manually since no redirect
+        setError(t('account_created_check_email'));
+        setLoading(false);
         return;
       }
-      
-      // Si on est là, l'utilisateur est connecté et le useEffect va rediriger
     } catch (err) {
       setError(err.message || "Erreur lors de la création du compte");
     } finally {
-      if (!user) setLoading(false); // Only stop loading if we didn't log in (otherwise we want to show loading until redirect)
+      if (!user) setLoading(false);
     }
   };
 
   return (
     <AuthLayout>
       <h1 className="text-2xl font-extrabold mb-1">
-        Créer un compte
+        {t('register_title')}
       </h1>
       <p className="text-gray-500 mb-6">
-        Rejoignez <span className="font-semibold">TFExpress</span>
+        {t('register_subtitle')} <span className="font-semibold">TFExpress</span>
       </p>
 
       <OAuthButtons />
@@ -74,7 +73,7 @@ const Register = () => {
         <AuthInput
           icon={Mail}
           type="email"
-          placeholder="Adresse email"
+          placeholder={t('email_label')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -83,7 +82,7 @@ const Register = () => {
         <AuthInput
           icon={Lock}
           type="password"
-          placeholder="Mot de passe"
+          placeholder={t('password_label')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           showToggle
@@ -93,24 +92,24 @@ const Register = () => {
         <AuthInput
           icon={Lock}
           type="password"
-          placeholder="Confirmer le mot de passe"
+          placeholder={t('confirm_password')}
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           required
         />
 
         <LoadingButton loading={loading}>
-          Créer mon compte
+          {t('create_account_button')}
         </LoadingButton>
       </form>
 
       <p className="text-sm text-center mt-6">
-        Déjà un compte ?{" "}
+        {t('already_account')}{" "}
         <Link
           to="/login"
-          className="text-blue-500 font-medium hover:underline"
+          className="text-orange-500 font-medium hover:underline"
         >
-          Se connecter
+          {t('log_in')}
         </Link>
       </p>
     </AuthLayout>

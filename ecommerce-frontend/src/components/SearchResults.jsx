@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSearch } from "../context/SearchContext";
 import { getProducts } from "../services/api/products.api";
+import { useLocalization } from "../context/LocalizationContext";
 
 const SearchResults = () => {
   const { query, setQuery } = useSearch();
   const navigate = useNavigate();
+  const { t, formatPrice } = useLocalization();
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -40,23 +42,16 @@ const SearchResults = () => {
 
   if (!query || query.trim().length < 2) return null;
 
-  // Helper to safely format price
-  const formatPrice = (price) => {
-    if (typeof price === 'number') return price.toLocaleString();
-    if (typeof price === 'string') return price;
-    return "0"; // Fallback for objects/null to prevent crash
-  };
-
   return (
     <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl z-50 overflow-hidden ring-1 ring-black/5">
       {loading ? (
         <div className="p-6 text-center text-gray-500 text-sm">
           <div className="animate-spin w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-          Recherche en cours...
+          {t('analyzing')}
         </div>
       ) : results.length === 0 ? (
         <div className="p-4 text-sm text-gray-500 text-center">
-          Aucun résultat pour <span className="font-bold text-gray-900">"{query}"</span>
+          {t('no_results_for') || 'Aucun résultat pour'} <span className="font-bold text-gray-900">"{query}"</span>
         </div>
       ) : (
         <>
@@ -87,7 +82,7 @@ const SearchResults = () => {
                       {product.name}
                     </p>
                     <p className="text-xs font-bold text-red-500 mt-0.5">
-                      {formatPrice(product.price)} FCFA
+                      {formatPrice(product.price)}
                     </p>
                   </div>
                 </li>
@@ -101,7 +96,7 @@ const SearchResults = () => {
             }}
             className="w-full text-center text-xs font-bold uppercase tracking-wider text-red-500 py-3 hover:bg-red-50 transition border-t"
           >
-            Voir tous les résultats
+            {t('see_all_results') || 'Voir tous les résultats'}
           </button>
         </>
       )}

@@ -12,6 +12,7 @@ import statsRoutes from "./routes/stats.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import returnRoutes from "./routes/return.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
 
 
 /* ===== ENV ===== */
@@ -32,6 +33,9 @@ app.use(
     credentials: true,
   })
 );
+  
+// Middleware spécial pour le Webhook Jeko (doit être AVANT express.json)
+app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -60,6 +64,7 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/returns", returnRoutes);
+app.use("/api/payments", paymentRoutes);
 
 
 /* ===== SERVER ===== */
