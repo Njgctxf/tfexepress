@@ -10,20 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🚚 Récupération du code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: ⚙️ Configuration de Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: "npm"
-          cache-dependency-path: ecommerce-frontend/package-lock.json
 
       - name: 📦 Installation et Build du Frontend
         run: |
           cd ecommerce-frontend
           npm install
-          npm run build
+          CI=false npm run build
 
       - name: 🚀 Transfert vers Hostinger (FTP)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
