@@ -1,0 +1,37 @@
+name: 🚀 Déploiement Automatique TFExpress
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Récupération du code
+        uses: actions/checkout@v3
+
+      - name: ⚙️ Configuration de Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+          cache-dependency-path: ecommerce-frontend/package-lock.json
+
+      - name: 📦 Installation et Build du Frontend
+        run: |
+          cd ecommerce-frontend
+          npm install
+          npm run build
+
+      - name: 🚀 Transfert vers Hostinger (FTP)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: 147.93.88.155
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ecommerce-frontend/dist/
+          server-dir: public_html/
+          protocol: ftp
+          port: 21
