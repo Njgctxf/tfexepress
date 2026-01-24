@@ -5,16 +5,17 @@ import { API_URL } from "./config";
  */
 export async function initiateJekoPayment(orderId, amount, customerEmail) {
   try {
-    const response = await fetch(`${API_URL}/api/payments/checkout`, {
+    // Appel vers la Supabase Edge Function
+    const response = await fetch(`${API_URL}/jeko-checkout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        // Authorization: `Bearer ${supabaseKey}` // Si besoin d'auth
       },
       body: JSON.stringify({
         orderId,
         amount,
         customerEmail,
-        // On peut passer des successUrl/cancelUrl personnalisées ici si besoin
       }),
     });
 
