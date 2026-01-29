@@ -60,6 +60,27 @@ export async function getProducts(filters = {}) {
     if (filters.minPrice) query = query.gte('price', filters.minPrice);
     if (filters.maxPrice) query = query.lte('price', filters.maxPrice);
 
+    // 2.5 SORTING
+    if (filters.sort) {
+      if (filters.sort === 'rating') {
+        // Assumes 'rating' column exists, or we might need a workaround if it's computed.
+        // Using logic from client-side assumption in Shop.jsx
+        query = query.order('rating', { ascending: false, nullsFirst: false });
+      } else if (filters.sort === 'price-asc') {
+        query = query.order('price', { ascending: true });
+      } else if (filters.sort === 'price-desc') {
+        query = query.order('price', { ascending: false });
+      } else if (filters.sort === 'recent') {
+        query = query.order('created_at', { ascending: false });
+      }
+    } else {
+      // Default sort if NOT searching (searching usually ranks by relevance/text match implicitly or we leave default)
+      // If simply listing, default to recent or id
+      if (!filters.search) {
+        query = query.order('created_at', { ascending: false });
+      }
+    }
+
     const { data, error } = await query;
     if (error) throw error;
 
@@ -146,16 +167,23 @@ const uploadToStorage = async (file) => {
  */
 export async function createProduct(productData) {
   try {
-    // 1. Process Images (Upload to Storage)
+    // 1. Process Images
     const processedImages = [];
     if (Array.isArray(productData.images)) {
       for (const item of productData.images) {
         if (item instanceof File) {
+          // Resize before upload
+          const resizedDataUrl = await resizeImage(item);
+          // Convert DataURL back to Blob for upload
+          const res = await fetch(resizedDataUrl);
+          const blob = await res.blob();
+          const fileToUpload = new File([blob], item.name, { type: "image/jpeg" });
+
           // Upload to Supabase Storage
-          const url = await uploadToStorage(item);
+          const url = await uploadToStorage(fileToUpload);
           if (url) processedImages.push(url);
         } else if (typeof item === 'string') {
-          // Keep existing URLs (or Base64 if any legacy remained, but likely URLs now)
+          // Keep existing URLs
           processedImages.push(item);
         }
       }
@@ -198,8 +226,14 @@ export async function updateProduct(id, updates) {
     if (Array.isArray(updates.images)) {
       for (const item of updates.images) {
         if (item instanceof File) {
+          // Resize before upload
+          const resizedDataUrl = await resizeImage(item);
+          const res = await fetch(resizedDataUrl);
+          const blob = await res.blob();
+          const fileToUpload = new File([blob], item.name, { type: "image/jpeg" });
+
           // Upload new file
-          const url = await uploadToStorage(item);
+          const url = await uploadToStorage(fileToUpload);
           if (url) processedImages.push(url);
         } else if (typeof item === 'string') {
           // Keep existing URL

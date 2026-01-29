@@ -105,8 +105,9 @@ export async function createOrder(orderData) {
       }
     }
 
-    // 4. Envoi de l'email de confirmation (Asynchrone)
-    sendOrderEmail({ ...order, items: orderItems }).catch(err => 
+    // 4. Envoi de l'email de confirmation via EmailJS (Solution Frontend)
+    console.log("📨 Envoi de l'email via EmailJS...");
+    sendOrderEmail({ ...order, items: orderItems }).catch(err =>
       console.error("EmailJS Error:", err)
     );
 

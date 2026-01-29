@@ -3,6 +3,7 @@ import MainLayout from "../layout/MainLayout";
 import CategoryBar from "../components/CategoryBar";
 import PopularBrands from "../components/PopularBrands";
 
+
 import Hero from "../components/Hero";
 import DiscountedGoods from "../components/DiscountedGoods";
 import PromoSection from "../components/Promosection";

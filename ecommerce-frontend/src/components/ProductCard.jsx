@@ -52,18 +52,17 @@ const ProductCard = ({ product }) => {
         )}
         <button
           onClick={handleFavorite}
-          className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${
-            typeof isFavorite === 'function' && isFavorite(product.id) ? "bg-red-500 text-white" : "bg-white/50 backdrop-blur-md text-gray-600 hover:bg-white hover:text-red-500 hover:scale-110"
-          }`}
+          className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${typeof isFavorite === 'function' && isFavorite(product.id) ? "bg-red-500 text-white" : "bg-white/50 backdrop-blur-md text-gray-600 hover:bg-white hover:text-red-500 hover:scale-110"
+            }`}
         >
           <Heart size={18} fill={typeof isFavorite === 'function' && isFavorite(product.id) ? "currentColor" : "none"} />
         </button>
         {isInCart ? (
-          <button onClick={handleCartAction} className="absolute bottom-4 inset-x-4 h-12 rounded-xl backdrop-blur-md font-semibold text-sm flex items-center justify-center gap-2 shadow-lg translate-y-[120%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out bg-red-500/90 text-white hover:bg-red-600">
+          <button onClick={handleCartAction} className="hidden md:flex absolute bottom-4 inset-x-4 h-12 rounded-xl backdrop-blur-md font-semibold text-sm items-center justify-center gap-2 shadow-lg translate-y-[120%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out bg-red-500/90 text-white hover:bg-red-600">
             <Trash2 size={16} /> {t('remove_from_cart')}
           </button>
         ) : (
-          <button onClick={handleCartAction} className="absolute bottom-4 inset-x-4 h-12 rounded-xl backdrop-blur-md font-semibold text-sm flex items-center justify-center gap-2 shadow-lg translate-y-[120%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out bg-white/90 text-black hover:bg-white">
+          <button onClick={handleCartAction} className="hidden md:flex absolute bottom-4 inset-x-4 h-12 rounded-xl backdrop-blur-md font-semibold text-sm items-center justify-center gap-2 shadow-lg translate-y-[120%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out bg-white/90 text-black hover:bg-white">
             <ShoppingBag size={16} /> {t('add_to_cart')}
           </button>
         )}

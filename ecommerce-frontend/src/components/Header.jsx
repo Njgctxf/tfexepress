@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Menu,
   X,
@@ -11,7 +11,9 @@ import {
   LogOut,
   Grid,
   Globe,
-  Coins
+  Coins,
+  Home,
+  ShoppingBag
 } from "lucide-react";
 
 import { getCategories } from "../services/api";
@@ -28,6 +30,7 @@ import { useSiteSettings } from "../context/SiteSettingsContext";
 import SearchResults from "../components/SearchResults";
 
 const Header = () => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [openUser, setOpenUser] = useState(false);
@@ -77,14 +80,14 @@ const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
       <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-      
+
       {/* ================= TOP BAR (LOCALE & CURRENCY) ================= */}
       <div className="bg-gray-50 border-b hidden md:block">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex justify-end gap-6 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
           <div className="flex items-center gap-2">
             <Globe size={12} />
-            <select 
-              value={language} 
+            <select
+              value={language}
               onChange={(e) => {
                 console.log("Language changed to:", e.target.value);
                 setLanguage(e.target.value);
@@ -97,8 +100,8 @@ const Header = () => {
           </div>
           <div className="flex items-center gap-2">
             <Coins size={12} />
-            <select 
-              value={currency} 
+            <select
+              value={currency}
               onChange={(e) => {
                 console.log("Currency changed to:", e.target.value);
                 setCurrency(e.target.value);
@@ -130,6 +133,7 @@ const Header = () => {
               onChange={(e) => setQuery(e.target.value)}
               className="flex-1 py-2 text-sm outline-none"
               placeholder={t('search')}
+              onKeyDown={(e) => e.key === "Enter" && navigate(`/shop?search=${query}`)}
             />
             <button className="px-3 text-gray-500 hover:text-red-500 transition-colors" onClick={handleImageClick}>
               <Camera size={18} />
@@ -143,7 +147,7 @@ const Header = () => {
             <Link to="/" className="text-sm font-medium hover:text-gray-600">{t('home')}</Link>
             <Link to="/shop" className="text-sm font-medium hover:text-gray-600">{t('shop')}</Link>
           </nav>
-          
+
           <Link to="/favorites" className="relative group" aria-label={t('favorites')}>
             <Heart size={22} className="group-hover:text-red-500 transition-colors" />
             {favorites.length > 0 && <span className="badge">{favorites.length}</span>}
@@ -211,16 +215,19 @@ const Header = () => {
       </div>
 
       <div className="md:hidden px-4 pb-3">
-        <div className="flex w-full border rounded-full overflow-hidden bg-gray-50 relative z-20">
-          <Search className="mx-4 my-auto text-gray-500" size={18} />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 py-2 text-sm bg-transparent outline-none"
-            placeholder={t('search')}
-          />
-          <button className="px-3 text-gray-500" onClick={handleImageClick}><Camera size={18} /></button>
-          {query && query.trim().length >= 2 && <div className="absolute top-full left-0 w-full z-50"><SearchResults /></div>}
+        <div className="relative z-20">
+          <div className="flex w-full border rounded-full overflow-hidden bg-gray-50">
+            <Search className="mx-4 my-auto text-gray-500" size={18} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="flex-1 py-2 text-sm bg-transparent outline-none"
+              placeholder={t('search')}
+              onKeyDown={(e) => e.key === "Enter" && navigate(`/shop?search=${query}`)}
+            />
+            <button className="px-3 text-gray-500" onClick={handleImageClick}><Camera size={18} /></button>
+          </div>
+          <SearchResults />
         </div>
       </div>
 
@@ -256,10 +263,10 @@ const Header = () => {
 
           <div className="space-y-1">
             <h3 className="section-title">{t('home')}</h3>
-            <Link to="/" onClick={() => setOpen(false)} className="mobile-link">{t('home')}</Link>
-            <Link to="/shop" onClick={() => setOpen(false)} className="mobile-link">{t('shop')}</Link>
-            <Link to="/favorites" onClick={() => setOpen(false)} className="mobile-link">{t('favorites')}</Link>
-            <Link to="/cart" onClick={() => setOpen(false)} className="mobile-link">{t('cart')}</Link>
+            <Link to="/" onClick={() => setOpen(false)} className="mobile-link"><Home size={18} /> {t('home')}</Link>
+            <Link to="/shop" onClick={() => setOpen(false)} className="mobile-link"><ShoppingBag size={18} /> {t('shop')}</Link>
+            <Link to="/favorites" onClick={() => setOpen(false)} className="mobile-link"><Heart size={18} /> {t('favorites')}</Link>
+            <Link to="/cart" onClick={() => setOpen(false)} className="mobile-link"><ShoppingCart size={18} /> {t('cart')}</Link>
           </div>
 
           <div className="space-y-1">

@@ -11,6 +11,8 @@ import { Link, useSearchParams } from "react-router-dom";
 export default function Shop() {
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get("category");
+  const searchParam = searchParams.get("search");
+  const sortParam = searchParams.get("sort");
   const { formatPrice, t } = useLocalization();
 
   const [products, setProducts] = useState([]);
@@ -19,9 +21,17 @@ export default function Shop() {
 
   // Filters State
   const [activeCategory, setActiveCategory] = useState(categoryParam || "all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParam || "");
+
+  useEffect(() => {
+    if (searchParam) setSearchQuery(searchParam);
+  }, [searchParam]);
+
+  useEffect(() => {
+    if (sortParam) setSortBy(sortParam);
+  }, [sortParam]);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 1000000 });
-  const [sortBy, setSortBy] = useState("recent");
+  const [sortBy, setSortBy] = useState(sortParam || "recent");
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
