@@ -96,7 +96,7 @@ L'application frontend démarrera sur `http://localhost:5173`
 -  Support client
 -  Upload d'images de produits
 
-## 🤝 Contribution
+## Contribution
 
 Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou soumettre une pull request.
 
@@ -104,7 +104,8 @@ Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou so
 
 Ce projet est sous licence MIT.
 
-## 👨‍💻 Auteur
+## Auteur
 
 Développé avec  par KACOU Victoire
+
 
