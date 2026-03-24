@@ -3,6 +3,7 @@ import { Heart, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useFavorites } from "../context/FavoritesContext";
 import { useLocalization } from "../context/LocalizationContext";
+import { getProxiedImageUrl } from "../utils/imageProxy";
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
@@ -31,7 +32,8 @@ const ProductCard = ({ product }) => {
 
   const getImageUrl = (p) => {
     let img = p.image || (p.images && p.images[0]);
-    return img || "https://placehold.co/400x400/png?text=No+Image";
+    if (!img) return "https://placehold.co/400x400/png?text=No+Image";
+    return getProxiedImageUrl(img);
   };
 
   return (

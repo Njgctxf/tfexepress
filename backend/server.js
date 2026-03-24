@@ -14,6 +14,7 @@ import reviewRoutes from "./routes/review.routes.js";
 import returnRoutes from "./routes/return.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
 import syncRoutes from "./routes/sync.routes.js";
+import proxyRoutes from "./routes/proxy.routes.js";
 
 
 /* ===== ENV ===== */
@@ -76,6 +77,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/returns", returnRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/sync", syncRoutes);
+app.use("/api/proxy", proxyRoutes);
 
 
 /* ===== SERVER ===== */

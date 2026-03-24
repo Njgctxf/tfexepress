@@ -8,6 +8,7 @@ import { useCart } from "../context/CartContext";
 import { useFavorites } from "../context/FavoritesContext";
 import { useLocalization } from "../context/LocalizationContext";
 import { useParams, useNavigate } from "react-router-dom";
+import { getProxiedImageUrl } from "../utils/imageProxy";
 import {
   Star, ChevronDown, ChevronUp, Plus, Minus,
   Heart, Share2
@@ -125,12 +126,12 @@ const ProductDetails = () => {
         <div className="max-w-7xl mx-auto px-4 lg:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
           <div className="space-y-6">
             <div className="aspect-square bg-white border border-gray-100 rounded-none lg:rounded-3xl overflow-hidden relative group">
-              <img src={images[activeImage]} alt={product.name} className="w-full h-full object-contain bg-white p-8 transition-transform duration-500 group-hover:scale-105" />
+              <img src={getProxiedImageUrl(images[activeImage])} alt={product.name} className="w-full h-full object-contain bg-white p-8 transition-transform duration-500 group-hover:scale-105" />
             </div>
             <div className="hidden lg:grid grid-cols-4 gap-4">
               {images.map((img, idx) => (
                 <button key={idx} onClick={() => setActiveImage(idx)} className={`aspect-square bg-white rounded-xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-black' : 'border-transparent hover:border-gray-200'}`}>
-                  <img src={img} alt="" className="w-full h-full object-contain p-2" />
+                  <img src={getProxiedImageUrl(img)} alt="" className="w-full h-full object-contain p-2" />
                 </button>
               ))}
             </div>

@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash, Search, Filter, AlertCircle, Package, TrendingUp, 
 import { useEffect, useState, useRef } from "react";
 import ProductsSalesChart from "../components/ProductsSalesChart";
 import { getProducts, getCategories, deleteProduct, bulkCreateProducts } from "../../services/api";
+import { getProxiedImageUrl } from "../../utils/imageProxy";
 
 import KpiCard from "../components/KpiCard";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -113,12 +114,16 @@ export default function Products() {
         return;
       }
 
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const delimiter = lines[0].includes(';') ? ';' : ',';
+      const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase().replace(/"/g, ''));
       const productsToInsert = [];
 
       for (let i = 1; i < lines.length; i++) {
-        // Handle commas inside quotes for typical simple CSVs
-        const currentline = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        // Gérer les guillemets.
+        const regex = new RegExp(`${delimiter}(?=(?:(?:[^"]*"){2})*[^"]*$)`);
+        const currentline = lines[i].split(regex);
+        
+        // S'il n'y a pas assez de colonnes sur cette ligne, on l'ignore
         if (currentline.length < 2) continue;
 
         const obj = {};
@@ -130,19 +135,25 @@ export default function Products() {
           obj[headers[j]] = val;
         }
 
-        // Mapping CSV columns to DB columns
-        const name = obj.name || obj.nom;
-        if (!name) continue; // Skip lines without a name
+        // Reconnaître plusieurs variantes pour le Nom
+        const name = obj.name || obj.nom || obj.titre || obj.title;
+        if (!name) continue; 
+
+        let catId = obj.category_id || obj.categorie || obj.category || null;
+        if (catId === "") catId = null;
+
+        // Gérer les virgules dans les nombres depuis Excel (ex: 10,50 -> 10.50)
+        let rawPrice = String(obj.price || obj.prix || "0").replace(',', '.');
 
         productsToInsert.push({
           name: name,
-          description: obj.description || "",
-          price: parseFloat(obj.price || obj.prix) || 0,
-          stock: parseInt(obj.stock || obj.quantite, 10) || 0,
-          category_id: obj.category_id || obj.categorie || obj.category || null,
-          images: obj.image || obj.images ? [obj.image || obj.images] : [],
+          description: obj.description || obj.desc || "",
+          price: parseFloat(rawPrice) || 0,
+          stock: parseInt(obj.stock || obj.quantite || obj.qty, 10) || 0,
+          category_id: catId,
+          images: (obj.image || obj.images || obj.imageurl) ? [obj.image || obj.images || obj.imageurl] : [],
           brand: obj.brand || obj.marque || null,
-          is_featured: obj.is_featured === 'true' || obj.is_featured === '1'
+          is_featured: obj.is_featured === 'true' || obj.is_featured === '1' || obj.is_featured === 'VRAI'
         });
       }
 
@@ -315,7 +326,7 @@ export default function Products() {
                         <div className="flex items-center gap-4">
                           <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100 shadow-sm relative group-hover:scale-105 transition-transform duration-300">
                             <img
-                              src={p.images?.[0] || p.image || "/placeholder.png"}
+                              src={getProxiedImageUrl(p.images?.[0] || p.image)}
                               alt={p.name}
                               className="w-full h-full object-cover"
                             />
@@ -394,7 +405,7 @@ export default function Products() {
                   {/* IMAGE */}
                   <div className="w-24 h-24 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden border border-gray-200 relative">
                     <img
-                      src={p.images?.[0] || p.image || "/placeholder.png"}
+                      src={getProxiedImageUrl(p.images?.[0] || p.image)}
                       alt={p.name}
                       className="w-full h-full object-cover"
                     />
