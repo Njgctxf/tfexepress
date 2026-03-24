@@ -113,11 +113,12 @@ export async function syncAliexpressProducts(req, res) {
 
           if (existing) {
             // Mettre à jour le produit existant
+            const imageUrl = product.imageUrl || product.image_url || product.image || (product.images && product.images[0]);
             const updates = {
               name: product.title,
               price: Number(product.price),
               ...(categoryId && { category_id: categoryId }),
-              ...(product.imageUrl && { images: [product.imageUrl] }),
+              ...(imageUrl && { images: [imageUrl] }),
             };
 
             await supabase
@@ -132,12 +133,14 @@ export async function syncAliexpressProducts(req, res) {
         }
 
         // Préparer le payload d'insertion
+        const imageUrl = product.imageUrl || product.image_url || product.image || (product.images && product.images[0]);
+        
         const payload = {
           name: product.title,
           price: Number(product.price),
           stock: 100, // Stock par défaut
           description: product.originalTitle || product.title,
-          images: product.imageUrl ? [product.imageUrl] : [],
+          images: imageUrl ? [imageUrl] : [],
           category_id: categoryId,
           aliexpress_id: product.id ? String(product.id) : null,
           aliexpress_url: product.productUrl || null,

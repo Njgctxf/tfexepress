@@ -326,6 +326,7 @@ export default function Products() {
                         <div className="flex items-center gap-4">
                           <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100 shadow-sm relative group-hover:scale-105 transition-transform duration-300">
                             <img
+                              referrerPolicy="no-referrer"
                               src={getProxiedImageUrl(p.images?.[0] || p.image)}
                               alt={p.name}
                               className="w-full h-full object-cover"

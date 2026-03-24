@@ -40,6 +40,7 @@ const ProductCard = ({ product }) => {
     <div onClick={goToDetail} className="group cursor-pointer flex flex-col w-full max-w-[280px] mx-auto">
       <div className="relative aspect-[3/4] rounded-[2rem] bg-white border border-gray-200 hover:border-gray-300 transition-colors duration-300 overflow-hidden mb-4">
         <img
+          referrerPolicy="no-referrer"
           src={getImageUrl(product)}
           alt={product.name}
           width="300"
