@@ -22,5 +22,5 @@ export const resizeImage = (file) => new Promise((resolve) => {
             resolve(canvas.toDataURL("image/jpeg", 0.7));
         };
     };
-    reader.onerror = (err) => resolve(null);
+    reader.onerror = () => resolve(null);
 });

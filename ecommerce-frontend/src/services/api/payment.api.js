@@ -8,7 +8,7 @@ export async function initiateJekoPayment(orderId, amount, customerEmail) {
     console.log("💳 Initialisation du paiement via start-payment (V2)...");
     
     // Appel vers la nouvelle Supabase Edge Function (V2 pour éviter le cache)
-    const response = await fetch(`${API_URL}/start-payment`, {
+    const response = await fetch(`${API_URL}/jeko-checkout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -25,35 +25,35 @@ export const SiteSettingsProvider = ({ children }) => {
         loading: true
     });
 
-    const fetchSettings = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('site_settings')
-                .select('*')
-                .eq('key', 'general')
-                .single();
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('site_settings')
+                    .select('*')
+                    .eq('key', 'general')
+                    .single();
 
-            if (error && error.code !== 'PGRST116') {
-                console.error("Error fetching general settings:", error);
-                return;
-            }
+                if (error && error.code !== 'PGRST116') {
+                    console.error("Error fetching general settings:", error);
+                    return;
+                }
 
-            if (data?.value) {
-                setSettings(prev => ({
-                    ...prev,
-                    ...data.value,
-                    loading: false
-                }));
-            } else {
+                if (data?.value) {
+                    setSettings(prev => ({
+                        ...prev,
+                        ...data.value,
+                        loading: false
+                    }));
+                } else {
+                    setSettings(prev => ({ ...prev, loading: false }));
+                }
+            } catch (err) {
+                console.error("Unexpected error fetching settings:", err);
                 setSettings(prev => ({ ...prev, loading: false }));
             }
-        } catch (err) {
-            console.error("Unexpected error fetching settings:", err);
-            setSettings(prev => ({ ...prev, loading: false }));
-        }
-    };
+        };
 
-    useEffect(() => {
         fetchSettings();
 
         // Subscribe to changes

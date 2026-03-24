@@ -101,7 +101,7 @@ const ProductDetails = () => {
       setReviews([addedReview, ...reviews]);
       setNewReview({ rating: 5, comment: "", user_name: "" });
       setShowReviewForm(false);
-    } catch (err) {
+    } catch {
       alert("Error adding review");
     } finally {
       setSubmittingReview(false);

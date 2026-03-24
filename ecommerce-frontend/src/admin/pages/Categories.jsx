@@ -61,7 +61,7 @@ const Categories = () => {
             setCategories(prev => prev.filter(c => c.id !== deleteId));
             setDeleteId(null);
             toast.success("Catégorie supprimée");
-        } catch (error) {
+        } catch {
             toast.error("Erreur lors de la suppression");
         }
     };

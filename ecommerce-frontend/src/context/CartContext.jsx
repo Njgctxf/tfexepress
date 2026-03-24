@@ -82,7 +82,7 @@ export const CartProvider = ({ children }) => {
       // We need to import supabase here if not already imported.
       // Since supabase is not imported in this file, we will dynamically import it or assume it's global?
       // Better: pass supabase client or import it at top.
-      const { createClient } = await import("@supabase/supabase-js");
+
       // Actually, better to use the configured client.
       const { supabase } = await import("../lib/supabase"); // Adjust path if needed
 

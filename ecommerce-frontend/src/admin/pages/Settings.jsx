@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import {
     Save, Globe, CreditCard, Truck, Shield,
     Store, Mail, Lock, CheckCircle, Smartphone,
+    Plus, Trash2, Edit, Plane, Ship, X,
     User, Camera, Eye, EyeOff, Facebook, Instagram, Youtube, Linkedin, Twitter
 } from "lucide-react";
 
@@ -15,7 +16,6 @@ export default function Settings() {
     const fileInputRef = useRef(null);
 
     // Password visibility states
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -51,11 +51,7 @@ export default function Settings() {
         paypalEnabled: false,
         paypalClientId: "",
 
-        shippingStandard: 0,
-        shippingExpress: 0,
-        shippingNational: 0,
-        shippingInternationalAir: 0,
-        shippingInternationalSea: 0,
+        shippingMethods: [],
         shippingFreeThreshold: 0,
 
         // Security (Local only)
@@ -92,11 +88,13 @@ export default function Settings() {
                 snapchat: siteSettings.general?.snapchat || "",
 
                 // Shipping
-                shippingStandard: siteSettings.shipping?.standard || 0,
-                shippingExpress: siteSettings.shipping?.express || 0,
-                shippingNational: siteSettings.shipping?.national || 0,
-                shippingInternationalAir: siteSettings.shipping?.internationalAir || 0,
-                shippingInternationalSea: siteSettings.shipping?.internationalSea || 0,
+                shippingMethods: siteSettings.shipping?.methods || [
+                    { id: 'std', name: 'Livraison Standard', price: siteSettings.shipping?.standard || 2000, zone: 'abidjan', details: '2-4 jours', enabled: true },
+                    { id: 'exp', name: 'Livraison Express', price: siteSettings.shipping?.express || 3000, zone: 'abidjan', details: '24h', enabled: true },
+                    { id: 'nat', name: 'Expedition Nationale', price: siteSettings.shipping?.national || 5000, zone: 'national', details: '', enabled: true },
+                    { id: 'air', name: '✈️ Par Avion', price: siteSettings.shipping?.internationalAir || 50000, zone: 'international', details: '', enabled: true },
+                    { id: 'sea', name: '🚢 Par Bateau', price: siteSettings.shipping?.internationalSea || 20000, zone: 'international', details: '', enabled: true }
+                ],
                 shippingFreeThreshold: siteSettings.shipping?.freeThreshold || 0,
 
                 // Payments
@@ -158,11 +156,7 @@ export default function Settings() {
             }
             if (activeTab === "shipping") {
                 await updateSiteSettings('shipping', {
-                    standard: Number(settings.shippingStandard),
-                    express: Number(settings.shippingExpress),
-                    national: Number(settings.shippingNational),
-                    internationalAir: Number(settings.shippingInternationalAir),
-                    internationalSea: Number(settings.shippingInternationalSea),
+                    methods: settings.shippingMethods,
                     freeThreshold: Number(settings.shippingFreeThreshold)
                 });
             }
@@ -210,11 +204,52 @@ export default function Settings() {
             reader.onloadend = () => {
                 const newAvatar = reader.result;
                 setSettings(prev => ({ ...prev, avatar: newAvatar }));
-                // Update context and DB immediately for avatar preview
                 updateAdminProfile({ avatar: newAvatar });
             };
             reader.readAsDataURL(file);
         }
+    };
+
+    const addShippingMethod = (zone) => {
+        const newMethod = {
+            id: 'meth-' + Date.now(),
+            name: 'Nouvelle méthode',
+            price: 0,
+            zone: zone,
+            details: '',
+            enabled: true
+        };
+        setSettings(prev => ({
+            ...prev,
+            shippingMethods: [...prev.shippingMethods, newMethod]
+        }));
+    };
+
+    const updateShippingMethod = (id, field, value) => {
+        setSettings(prev => ({
+            ...prev,
+            shippingMethods: prev.shippingMethods.map(m =>
+                m.id === id ? { ...m, [field]: field === 'price' ? Number(value) : value } : m
+            )
+        }));
+    };
+
+    const removeShippingMethod = (id) => {
+        if (window.confirm("Supprimer cette méthode de livraison ?")) {
+            setSettings(prev => ({
+                ...prev,
+                shippingMethods: prev.shippingMethods.filter(m => m.id !== id)
+            }));
+        }
+    };
+
+    const toggleShippingMethod = (id) => {
+        setSettings(prev => ({
+            ...prev,
+            shippingMethods: prev.shippingMethods.map(m =>
+                m.id === id ? { ...m, enabled: !m.enabled } : m
+            )
+        }));
     };
 
     const tabs = [
@@ -236,7 +271,7 @@ export default function Settings() {
     };
 
     return (
-        <div className="space-y-6 pt-2 pb-10 max-w-[1200px] w-full mx-auto">
+        <div className="space-y-6 pt-2 pb-10 max-w-[1200px] w-full mx-auto font-sans">
 
             {/* HEADER */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
@@ -281,9 +316,9 @@ export default function Settings() {
                                     }`}>
                                     <tab.icon size={20} />
                                 </div>
-                                <div>
-                                    <span className={`block font-bold ${isActive ? "text-gray-900" : "text-gray-600"}`}>{tab.label}</span>
-                                    <span className="text-xs text-gray-400 font-medium">{tab.desc}</span>
+                                <div className="overflow-hidden">
+                                    <span className={`block font-bold truncate ${isActive ? "text-gray-900" : "text-gray-600"}`}>{tab.label}</span>
+                                    <span className="text-xs text-gray-400 font-medium truncate block">{tab.desc}</span>
                                 </div>
                             </button>
                         )
@@ -301,7 +336,6 @@ export default function Settings() {
                                 <p className="text-gray-500 text-sm mt-1">Gérez vos informations personnelles</p>
                             </div>
 
-                            {/* AVATAR UPLOAD */}
                             <div className="flex items-center gap-6">
                                 <div className="relative group cursor-pointer">
                                     <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center text-4xl font-bold text-gray-400 overflow-hidden border-2 border-white shadow-lg">
@@ -545,42 +579,7 @@ export default function Settings() {
                                             />
                                         </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Pinterest</label>
-                                        <div className="relative">
-                                            <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M8 12a4 4 0 1 0 8 0 4 4 0 1 0-8 0" />
-                                                <path d="M10 7.5c1.5-1.5 4-1.5 5.5 0s1.5 4 0 5.5" />
-                                                <path d="M12 12v5" />
-                                                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                                            </svg>
-                                            <input
-                                                type="text"
-                                                name="pinterest"
-                                                value={settings.pinterest}
-                                                onChange={handleChange}
-                                                placeholder="URL Pinterest"
-                                                className="w-full pl-12 pr-4 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-black outline-none transition-all"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Snapchat</label>
-                                        <div className="relative">
-                                            <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M3.7 10a7 7 0 0 1 15.6 1h.9a1 1 0 0 1 .9 1.3l-1.6 3.4a2 2 0 0 1-.6 2.4c-.7.5-1.7.5-2.5 0a2 2 0 0 0-2.3 0c-.8.5-1.7.6-2.6 0a2 2 0 0 0-2.3 0c-.8.5-1.8.6-2.6 0a2 2 0 0 0-2.3 0C3 18.5 2 18 1.4 17A2 2 0 0 1 2 15l1.6-3.4a1 1 0 0 1 .9-1.3h.8Z" />
-                                            </svg>
-                                            <input
-                                                type="text"
-                                                name="snapchat"
-                                                value={settings.snapchat}
-                                                onChange={handleChange}
-                                                placeholder="URL Snapchat"
-                                                className="w-full pl-12 pr-4 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-black outline-none transition-all"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
+                                 </div>
                             </div>
                         </div>
                     )}
@@ -668,159 +667,118 @@ export default function Settings() {
                     {/* SHIPPING TAB */}
                     {activeTab === "shipping" && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <div className="pb-4 border-b border-gray-100">
-                                <h2 className="text-xl font-bold text-gray-900">Livraison & Frais</h2>
-                                <p className="text-gray-500 text-sm mt-1">Définissez vos règles de livraison</p>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div className="p-5 border border-gray-200 rounded-2xl hover:border-black transition-colors cursor-pointer group">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="p-3 bg-gray-100 rounded-xl group-hover:bg-black group-hover:text-white transition-colors">
-                                            <Truck size={24} />
-                                        </div>
-                                        <span className="text-sm font-bold bg-green-100 text-green-700 px-2 py-1 rounded-md">Activé</span>
-                                    </div>
-                                    <h3 className="font-bold text-lg mb-1">Livraison Standard</h3>
-                                    <p className="text-gray-500 text-sm mb-4">Frais fixes pour toutes les commandes.</p>
-
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            name="shippingStandard"
-                                            value={settings.shippingStandard}
-                                            onChange={handleChange}
-                                            className="w-full pl-4 pr-16 py-2 border border-gray-300 rounded-lg font-bold"
-                                        />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs pointer-events-none font-bold">
-                                            {getCurrencySymbol(settings.currency)}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="p-5 border border-gray-200 rounded-2xl hover:border-black transition-colors cursor-pointer group">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="p-3 bg-gray-100 rounded-xl group-hover:bg-black group-hover:text-white transition-colors">
-                                            <GiftIcon />
-                                        </div>
-                                        <span className="text-sm font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-md">Seuil</span>
-                                    </div>
-                                    <h3 className="font-bold text-lg mb-1">Livraison Gratuite</h3>
-                                    <p className="text-gray-500 text-sm mb-4">Offerte à partir d'un certain montant.</p>
-
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            name="shippingFreeThreshold"
-                                            value={settings.shippingFreeThreshold}
-                                            onChange={handleChange}
-                                            className="w-full pl-4 pr-16 py-2 border border-gray-300 rounded-lg font-bold"
-                                        />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs pointer-events-none font-bold">
-                                            {getCurrencySymbol(settings.currency)}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="p-5 border border-gray-200 rounded-2xl hover:border-black transition-colors cursor-pointer group">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="p-3 bg-gray-100 rounded-xl group-hover:bg-black group-hover:text-white transition-colors">
-                                            <span className="font-bold">🚀</span>
-                                        </div>
-                                        <span className="text-sm font-bold bg-purple-100 text-purple-700 px-2 py-1 rounded-md">Optionnel</span>
-                                    </div>
-                                    <h3 className="font-bold text-lg mb-1">Livraison Express</h3>
-                                    <p className="text-gray-500 text-sm mb-4">Tarif pour une livraison rapide (24h).</p>
-
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            name="shippingExpress"
-                                            value={settings.shippingExpress}
-                                            onChange={handleChange}
-                                            className="w-full pl-4 pr-16 py-2 border border-gray-300 rounded-lg font-bold"
-                                        />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs pointer-events-none font-bold">
-                                            {getCurrencySymbol(settings.currency)}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="p-5 border border-gray-200 rounded-2xl hover:border-black transition-colors cursor-pointer group">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="p-3 bg-gray-100 rounded-xl group-hover:bg-black group-hover:text-white transition-colors">
-                                            <Globe size={24} />
-                                        </div>
-                                        <span className="text-sm font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-md">National (Hors Abidjan)</span>
-                                    </div>
-                                    <h3 className="font-bold text-lg mb-1">Intérieur du Pays</h3>
-                                    <p className="text-gray-500 text-sm mb-4">Expédition vers les autres villes.</p>
-
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            name="shippingNational"
-                                            value={settings.shippingNational}
-                                            onChange={handleChange}
-                                            className="w-full pl-4 pr-16 py-2 border border-gray-300 rounded-lg font-bold"
-                                        />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs pointer-events-none font-bold">
-                                            {getCurrencySymbol(settings.currency)}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="p-5 border border-gray-200 rounded-2xl hover:border-black transition-colors cursor-pointer group">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="p-3 bg-gray-100 rounded-xl group-hover:bg-black group-hover:text-white transition-colors">
-                                            <Globe size={24} />
-                                        </div>
-                                        <span className="text-sm font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md">International</span>
-                                    </div>
-                                    <h3 className="font-bold text-lg mb-1">Livraison Internationale</h3>
-                                    <p className="text-gray-500 text-sm mb-4">Expédition hors du pays.</p>
-
-                                    <div className="space-y-4">
-                                        <div className="space-y-1">
-                                            <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase">
-                                                <span>✈️ Avion</span>
-                                                <span>Rapide</span>
-                                            </div>
-                                            <div className="relative">
-                                                <input
-                                                    type="number"
-                                                    name="shippingInternationalAir"
-                                                    value={settings.shippingInternationalAir}
-                                                    onChange={handleChange}
-                                                    className="w-full pl-4 pr-16 py-2 border border-gray-300 rounded-lg font-bold"
-                                                />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs pointer-events-none font-bold">
-                                                    {getCurrencySymbol(settings.currency)}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-1">
-                                            <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase">
-                                                <span>🚢 Bateau</span>
-                                                <span>Économique</span>
-                                            </div>
-                                            <div className="relative">
-                                                <input
-                                                    type="number"
-                                                    name="shippingInternationalSea"
-                                                    value={settings.shippingInternationalSea}
-                                                    onChange={handleChange}
-                                                    className="w-full pl-4 pr-16 py-2 border border-gray-300 rounded-lg font-bold"
-                                                />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 bg-gray-100 px-2 py-1 rounded text-xs pointer-events-none font-bold">
-                                                    {getCurrencySymbol(settings.currency)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div className="pb-4 border-b border-gray-100 flex justify-between items-center">
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-900">Livraison & Frais</h2>
+                                    <p className="text-gray-500 text-sm mt-1">Gérez vos zones et méthodes de livraison</p>
                                 </div>
                             </div>
+
+                            {/* SEUIL LIVRAISON GRATUITE */}
+                            <div className="p-6 rounded-2xl border border-gray-100 bg-gray-50/50 space-y-4">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="p-2 bg-black text-white rounded-lg">
+                                        <GiftIcon className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-gray-900">Livraison Gratuite</h3>
+                                        <p className="text-xs text-gray-500">Seuil à partir duquel la livraison devient gratuite (Abidjan uniquement)</p>
+                                    </div>
+                                </div>
+                                <div className="relative max-w-xs">
+                                    <input
+                                        type="number"
+                                        name="shippingFreeThreshold"
+                                        value={settings.shippingFreeThreshold}
+                                        onChange={handleChange}
+                                        className="w-full pl-4 pr-16 py-2.5 bg-white border border-gray-200 rounded-xl font-bold focus:border-black outline-none transition-all"
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 bg-gray-100 px-2 py-1 rounded text-[10px] pointer-events-none font-bold">
+                                        {getCurrencySymbol(settings.currency)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* ZONES DE LIVRAISON */}
+                            {['abidjan', 'national', 'international'].map(zone => (
+                                <div key={zone} className="space-y-4">
+                                    <div className="flex items-center justify-between pt-4">
+                                        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 capitalize">
+                                            {zone === 'abidjan' ? '📍 Abidjan' : zone === 'national' ? '🇨🇮 National (Intérieur)' : '🌍 International'}
+                                        </h3>
+                                        <button 
+                                            onClick={() => addShippingMethod(zone)}
+                                            className="text-xs font-bold flex items-center gap-1.5 bg-black text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 transition-all shadow-sm"
+                                        >
+                                            <Plus size={14} /> Ajouter une méthode
+                                        </button>
+                                    </div>
+
+                                    <div className="grid gap-4">
+                                        {settings.shippingMethods
+                                            .filter(m => m.zone === zone)
+                                            .map(method => (
+                                                <div 
+                                                    key={method.id} 
+                                                    className={`p-5 rounded-2xl border transition-all ${method.enabled ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'}`}
+                                                >
+                                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                                        <div className="flex-1 space-y-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <input 
+                                                                    type="text"
+                                                                    value={method.name}
+                                                                    onChange={(e) => updateShippingMethod(method.id, 'name', e.target.value)}
+                                                                    placeholder="Nom de la livraison (ex: Express)"
+                                                                    className="flex-1 bg-transparent font-bold text-gray-900 border-b border-transparent focus:border-gray-300 outline-none"
+                                                                />
+                                                                <button 
+                                                                    onClick={() => toggleShippingMethod(method.id)}
+                                                                    className={`p-1.5 rounded-lg transition-colors ${method.enabled ? 'text-green-600 bg-green-50' : 'text-gray-400 bg-gray-100'}`}
+                                                                    title={method.enabled ? "Désactiver" : "Activer"}
+                                                                >
+                                                                    {method.enabled ? <CheckCircle size={18} /> : <X size={18} />}
+                                                                </button>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-3">
+                                                                <div className="relative w-32">
+                                                                    <input 
+                                                                        type="number"
+                                                                        value={method.price}
+                                                                        onChange={(e) => updateShippingMethod(method.id, 'price', e.target.value)}
+                                                                        className="w-full pl-3 pr-10 py-1.5 bg-gray-100 border border-transparent rounded-xl focus:bg-white focus:border-gray-200 outline-none text-sm font-bold shadow-sm"
+                                                                    />
+                                                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 font-bold uppercase">{getCurrencySymbol(settings.currency)}</span>
+                                                                </div>
+                                                                <input 
+                                                                    type="text"
+                                                                    value={method.details}
+                                                                    onChange={(e) => updateShippingMethod(method.id, 'details', e.target.value)}
+                                                                    placeholder="Détails (ex: 24h, Avion...)"
+                                                                    className="flex-1 min-w-[150px] px-3 py-1.5 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-gray-200 outline-none text-sm"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center justify-end">
+                                                            <button 
+                                                                onClick={() => removeShippingMethod(method.id)}
+                                                                className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                                            >
+                                                                <Trash2 size={20} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        }
+                                        {settings.shippingMethods.filter(m => m.zone === zone).length === 0 && (
+                                            <div className="py-8 text-center border-2 border-dashed border-gray-100 rounded-2xl text-gray-400 text-sm">
+                                                Aucune méthode de livraison pour cette zone.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
 

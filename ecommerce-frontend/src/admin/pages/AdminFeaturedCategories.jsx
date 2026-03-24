@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   getCategories,
   getFeaturedCategories,
@@ -14,16 +14,17 @@ const AdminFeaturedCategories = () => {
   const [position, setPosition] = useState(1);
   const [image, setImage] = useState(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const cats = await getCategories();
     const feat = await getFeaturedCategories();
     setCategories(cats);
     setFeatured(feat);
-  };
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadData();
+  }, [loadData]);
 
 const handleSubmit = async (e) => {
   e.preventDefault();

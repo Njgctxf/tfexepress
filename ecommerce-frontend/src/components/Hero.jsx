@@ -48,7 +48,7 @@ const Hero = ({ category = "all" }) => {
 
     // Fetch products for mobile hero
     // Strategy "Recent" ensures the section is never empty if products exist
-    const filters = { limit: 10, page: 1, sort: 'recent' };
+    const filters = { limit: 6, page: 1, sort: 'recent' };
     if (category && category !== "all") {
       // Simplistic matching for category if we had ID, but here we might just fetch random/all for diversity
       // or user might want actual filtering. 
@@ -207,7 +207,7 @@ const Hero = ({ category = "all" }) => {
           </button>
         </div>
 
-        <div className="grid grid-cols-5 gap-y-4 gap-x-2 px-2">
+        <div className="grid grid-cols-3 gap-y-4 gap-x-2 px-2">
           {mobileProducts.map((p) => (
             <div
               key={p.id}

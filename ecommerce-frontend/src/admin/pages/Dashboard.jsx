@@ -17,45 +17,45 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // 1. Counts
+        const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+        const { count: productCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
+        const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true });
+
+        // 2. Recent Orders for Table
+        const { data: recentOrders } = await supabase
+          .from('orders')
+          .select('id, total, created_at, status, profiles(full_name)')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        // 3. Calculate Total Revenue (Fetch all valid orders amounts)
+        const { data: allOrders } = await supabase
+          .from('orders')
+          .select('total')
+          .neq('status', 'Annulé'); // Exclude cancelled
+
+        const totalRevenue = allOrders ? allOrders.reduce((acc, order) => acc + (order.total || 0), 0) : 0;
+
+        setStats({
+          totalUsers: userCount || 0,
+          totalProducts: productCount || 0,
+          totalOrders: orderCount || 0,
+          totalRevenue: totalRevenue,
+          recentOrders: recentOrders || [],
+          loading: false
+        });
+
+      } catch (error) {
+        console.error("Error fetching dashboard:", error);
+        setStats(prev => ({ ...prev, loading: false }));
+      }
+    };
+
     fetchDashboardData();
   }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      // 1. Counts
-      const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
-      const { count: productCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
-      const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true });
-
-      // 2. Recent Orders for Table
-      const { data: recentOrders } = await supabase
-        .from('orders')
-        .select('id, total, created_at, status, profiles(full_name)')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      // 3. Calculate Total Revenue (Fetch all valid orders amounts)
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('total')
-        .neq('status', 'Annulé'); // Exclude cancelled
-
-      const totalRevenue = allOrders ? allOrders.reduce((acc, order) => acc + (order.total || 0), 0) : 0;
-
-      setStats({
-        totalUsers: userCount || 0,
-        totalProducts: productCount || 0,
-        totalOrders: orderCount || 0,
-        totalRevenue: totalRevenue,
-        recentOrders: recentOrders || [],
-        loading: false
-      });
-
-    } catch (error) {
-      console.error("Error fetching dashboard:", error);
-      setStats(prev => ({ ...prev, loading: false }));
-    }
-  };
 
   // MOCK DATA FOR CHART (To make it look good even empty)
   const chartData = [

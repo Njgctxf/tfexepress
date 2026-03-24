@@ -30,7 +30,7 @@ jobs:
           server: 147.93.88.155
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ecommerce-frontend/dist/
+          local-dir: ecommerce-frontend/UPLOAD_SUR_HOSTINGER/
           server-dir: public_html/
           protocol: ftp
           port: 21

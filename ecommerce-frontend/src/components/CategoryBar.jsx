@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Grid } from "lucide-react";
 import { getCategories } from "../services/api/categories.api";
 import { iconMap } from "../config/iconRegistry";
+import { useLocalization } from "../context/LocalizationContext";
 
 const CategoryBar = ({ active, setActive }) => {
+  const { t } = useLocalization();
   const scrollRef = useRef(null);
   const [categories, setCategories] = useState([]);
   const [showLeft, setShowLeft] = useState(false);
@@ -75,7 +77,7 @@ const CategoryBar = ({ active, setActive }) => {
               <Grid size={24} />
             </div>
             <span className={`text-xs font-bold tracking-wide uppercase ${active === "all" ? "text-black" : "text-gray-500 group-hover/item:text-black"}`}>
-              Tout voir
+              {t('see_all')}
             </span>
           </button>
 
@@ -100,7 +102,7 @@ const CategoryBar = ({ active, setActive }) => {
                   <Icon size={24} />
                 </div>
                 <span className={`text-xs font-bold tracking-wide uppercase truncate max-w-[120px] ${isActive ? "text-black" : "text-gray-500 group-hover/item:text-black"}`}>
-                  {cat.name}
+                  {t(cat.name)}
                 </span>
               </button>
             );

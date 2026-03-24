@@ -53,7 +53,7 @@ const Faq = () => {
         try {
             await deleteFaq(id);
             setFaqs(prev => prev.filter(f => f.id !== id));
-        } catch (error) {
+        } catch {
             alert("Erreur lors de la suppression");
         }
     };
@@ -70,7 +70,7 @@ const Faq = () => {
             }
             setIsModalOpen(false);
             resetForm();
-        } catch (error) {
+        } catch {
             alert("Erreur lors de l'enregistrement");
         }
     };

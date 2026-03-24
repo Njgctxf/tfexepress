@@ -7,7 +7,7 @@ import ProductCard from "../components/ProductCard";
 import { Heart, ArrowRight, ShoppingBag } from "lucide-react";
 
 const FavoritesPage = () => {
-  const { favorites, toggleFavorite } = useFavorites();
+  const { favorites } = useFavorites();
   const { addToCart } = useCart();
 
   const handleAddAllToCart = () => {

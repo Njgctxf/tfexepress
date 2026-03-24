@@ -1,5 +1,6 @@
 import { supabase } from "../../lib/supabase";
-import { sendOrderEmail } from "../email/emailjs.service";
+
+import { sendOrderEmails } from "../email/emailjs.service";
 
 /**
  * Récupère les commandes d'un utilisateur
@@ -105,13 +106,18 @@ export async function createOrder(orderData) {
       }
     }
 
-    // 4. Envoi de l'email de confirmation via EmailJS (Solution Frontend)
-    console.log("📨 Envoi de l'email via EmailJS...");
-    sendOrderEmail({ ...order, items: orderItems }).catch(err =>
-      console.error("EmailJS Error:", err)
-    );
+    // 4. Envoyer l'email de confirmation immédiatement pour les commandes hors Jeko
+    // (Pour Jeko, le webhook s'en chargera idéalement, mais ici on assure le coup pour le COD)
+    const fullOrder = { ...order, items: orderItems };
+    if (payment_method === "cod") {
+      sendOrderEmails(fullOrder).catch((err) =>
+        console.error("Email error:", err),
+      );
+    }
 
-    return { ...order, items: orderItems };
+    console.log("📝 Commande enregistrée.");
+
+    return fullOrder;
   } catch (error) {
     console.error("Error creating order:", error);
     throw error;

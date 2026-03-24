@@ -26,7 +26,7 @@ const resizeImage = (file) => new Promise((resolve) => {
       resolve(canvas.toDataURL("image/jpeg", 0.7));
     };
   };
-  reader.onerror = (err) => resolve(null);
+  reader.onerror = () => resolve(null);
 });
 
 /**
@@ -303,8 +303,23 @@ export async function getProductsCount(filters = {}) {
     const { count, error } = await query;
     if (error) throw error;
     return count;
-  } catch (e) {
+  } catch {
     return 0;
+  }
+}
+
+export async function bulkCreateProducts(productsArray) {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .insert(productsArray)
+      .select();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error("BULK CREATE ERROR:", error);
+    return { success: false, error: error.message };
   }
 }
 

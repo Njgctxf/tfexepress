@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { Zap, Star, Clock, Gift, Grid, Flame, Truck, ShieldCheck, Tag, ThumbsUp } from "lucide-react";
-import { useLocalization } from "../context/LocalizationContext";
+
 
 const QuickActions = () => {
     const navigate = useNavigate();
-    const { t } = useLocalization();
+
 
     const actions = [
         {

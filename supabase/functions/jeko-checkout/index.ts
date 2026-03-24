@@ -16,9 +16,9 @@ serve(async (req) => {
 
     // Initialiser Jeko
     // TODO: REMETTRE LES VARIABLES D'ENVIRONNEMENT APRÈS LE TEST
-    const jekoApiKey = "jeko_48bb71b5493073e34ad58442f3f13fc8c85119207509f8cbf49e5752c0546ac1";
-    const jekoKeyId = "1d5be1ce-0dc9-47ea-8216-b9e7773b3472";
-    const jekoStoreId = "Tfexpress"; // Ou s'assurer que c'est bien l'ID du store et pas son nom
+    const jekoApiKey = "jeko_d471e4f96212dfb0b81bc5ac9b51cf07cfbe4e8a86f4fd323a948afab0206c9b";
+    const jekoKeyId = "b84aaf2e-b8de-4b6d-bd00-d1def66cae59";
+    const jekoStoreId = "b84aaf2e-b8de-4b6d-bd00-d1def66cae59"; // Store ID UUID correct
 
     // URL correcte pour Jeko (Confirmée par doc)
     const jekoUrl = "https://api.jeko.africa/partner_api/payment_requests";
@@ -30,20 +30,20 @@ serve(async (req) => {
     const headers = {
       'Content-Type': 'application/json',
       'X-API-KEY': jekoApiKey,
-      // 'X-API-KEY-ID': jekoKeyId, // On retire cet ID qui semble causer l'erreur 401
+      'X-API-KEY-ID': jekoKeyId,
     };
 
     const body = {
-      amountCents: Math.round(amount), 
+      amountCents: Math.round(amount * 100), // Jeko requires amount in cents (XOF * 100)
       currency: 'XOF',
-      reference: orderId.toString(),
-      storeId: jekoStoreId,
+      reference: `TFX-${orderId.toString()}`, // Prefix to ensure minimum 5 characters
+      storeId: "31260f00-ca93-4e6d-9b00-4061fcb149f7", // Correct Store ID from Jeko API
       paymentDetails: {
         type: "redirect",
         data: {
-          // On laisse le choix à l'utilisateur
-          successUrl: `${req.headers.get('origin')}/order-success?order_id=${orderId}`,
-          errorUrl: `${req.headers.get('origin')}/checkout`,
+          paymentMethod: "wave", // Default to Wave if not specified, user can change on Jeko page often
+          successUrl: `${(req.headers.get('origin') && !req.headers.get('origin').includes('localhost')) ? req.headers.get('origin') : 'https://tfexpresss.com'}/order-success?order_id=${orderId}`,
+          errorUrl: `${(req.headers.get('origin') && !req.headers.get('origin').includes('localhost')) ? req.headers.get('origin') : 'https://tfexpresss.com'}/checkout`,
         }
       }
     };

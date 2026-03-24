@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { supabase } from "../config/supabase.js";
+import { sendOrderConfirmation } from "../services/email.service.js";
 
 const JEKO_API_URL = "https://api.jeko.africa/partner_api";
 
@@ -99,7 +100,7 @@ export async function handleWebhook(req, res) {
         console.log(`[WEBHOOK] Paiement réussi pour la commande: ${orderId}`);
 
         // Mettre à jour la commande dans Supabase
-        const { error } = await supabase
+        const { data: orderData, error } = await supabase
           .from("orders")
           .update({ 
             status: "Payé",
@@ -109,11 +110,18 @@ export async function handleWebhook(req, res) {
               payment_confirmed_at: new Date().toISOString()
             }
           })
-          .eq("id", orderId);
+          .eq("id", orderId)
+          .select("*, items:order_items(*)") // On récupère la commande avec ses items
+          .single();
 
         if (error) {
           console.error("[WEBHOOK] Erreur mise à jour commande:", error);
           return res.status(500).send("DB Error");
+        }
+
+        // Envoyer l'email de confirmation après paiement Jeko réussi
+        if (orderData) {
+          sendOrderConfirmation(orderData).catch(err => console.error("Email error:", err));
         }
       }
     }

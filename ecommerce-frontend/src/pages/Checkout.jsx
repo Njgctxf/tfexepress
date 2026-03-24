@@ -19,7 +19,9 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useLocalization } from "../context/LocalizationContext";
 import { supabase } from "../lib/supabase";
-import { createOrder, initiateJekoPayment } from "../services/api";
+import { createOrder } from "../services/api";
+import { initiateJekoPayment } from "../services/api/payment.api";
+import { sendOrderEmails } from "../services/email/emailjs.service";
 
 const Checkout = () => {
   const { cart, totalPrice, subTotal, discount, clearCart, loyaltyAmount, usePoints } = useCart();
@@ -58,14 +60,23 @@ const Checkout = () => {
     supabase.from("site_settings").select("value").eq("key", "shipping").single()
       .then(({ data }) => {
         if (data?.value) {
-          setShippingRates({
-            standard: data.value.standard !== undefined ? Number(data.value.standard) : 1500,
-            express: data.value.express !== undefined ? Number(data.value.express) : 3000,
-            national: data.value.national !== undefined ? Number(data.value.national) : 5000,
-            internationalAir: data.value.internationalAir !== undefined ? Number(data.value.internationalAir) : 15000,
-            internationalSea: data.value.internationalSea !== undefined ? Number(data.value.internationalSea) : 10000,
-            freeThreshold: data.value.freeThreshold !== undefined ? Number(data.value.freeThreshold) : 100000
-          });
+          const val = data.value;
+          // Support new dynamic structure
+          if (val.methods) {
+            setShippingRates(val);
+          } else {
+            // Fallback for old structure
+            setShippingRates({
+              methods: [
+                { id: 'standard', name: t('standard_shipping') || 'Standard', price: val.standard || 1500, zone: 'abidjan', details: '2-4 jours', enabled: true },
+                { id: 'express', name: t('express_shipping') || 'Express', price: val.express || 3000, zone: 'abidjan', details: '24h', enabled: true },
+                { id: 'national', name: 'Expédition Nationale', price: val.national || 5000, zone: 'national', details: '', enabled: true },
+                { id: 'air', name: '✈️ Par Avion (Rapide)', price: val.internationalAir || 15000, zone: 'international', details: '', enabled: true },
+                { id: 'sea', name: '🚢 Par Bateau (Économique)', price: val.internationalSea || 10000, zone: 'international', details: '', enabled: true }
+              ],
+              freeThreshold: val.freeThreshold || 100000
+            });
+          }
         }
       });
   }, []);
@@ -105,7 +116,7 @@ const Checkout = () => {
   const handleNextStep = () => {
     // STEP 1 VALIDATION
     if (step === 1) {
-      const required = ['email', 'firstName', 'lastName', 'address', 'city', 'phone'];
+      const required = ['email', 'firstName', 'lastName', 'city', 'phone'];
       const newErrors = {};
 
       required.forEach(field => {
@@ -151,13 +162,14 @@ const Checkout = () => {
     setLoading(true);
     try {
       let finalShippingCost = 0;
+      const selectedMethod = shippingRates.methods?.find(m => m.id === shippingMethod);
+      if (selectedMethod) {
+        finalShippingCost = selectedMethod.price;
+      }
 
-      if (shippingZone === 'abidjan') {
-        finalShippingCost = shippingMethod === 'standard' ? shippingRates.standard : shippingRates.express;
-      } else if (shippingZone === 'national') {
-        finalShippingCost = shippingRates.national;
-      } else { // international
-        finalShippingCost = intlMethod === 'air' ? shippingRates.internationalAir : shippingRates.internationalSea;
+      // Check for free shipping threshold
+      if (shippingRates.freeThreshold && subTotal >= shippingRates.freeThreshold && shippingZone === 'abidjan') {
+        finalShippingCost = 0;
       }
 
       const couponAmount = discount ? (subTotal * discount.percent / 100) : 0;
@@ -208,6 +220,10 @@ const Checkout = () => {
           window.location.href = paymentRes.checkoutUrl;
           return; // Stop ici, la redirection va vider le panier via le webhook ou au retour
         }
+      } else {
+        // --- AUTRES PAIEMENTS (COD, etc.) ---
+        // Envoyer l'email immédiatement car il n'y a pas de webhook de paiement
+        await sendOrderEmails(order);
       }
 
       setStep(4);
@@ -362,9 +378,6 @@ const Checkout = () => {
                   {renderField("lastName", t('last_name'))}
                 </div>
 
-                {renderField("address", t('address_placeholder'))}
-                {renderField("apartment", "Appartement, suite, etc. (optionnel)")}
-
                 <div className="grid grid-cols-2 gap-3">
                   {renderField("city", t('city'))}
                   {renderField("phone", t('phone'))}
@@ -396,7 +409,7 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500">Expédier à</span>
-                  <span className="text-gray-900 font-medium truncate max-w-[200px]">{formData.address}, {formData.city}</span>
+                  <span className="text-gray-900 font-medium truncate max-w-[200px]">{formData.city}</span>
                   <button onClick={() => setStep(1)} className="text-xs font-medium text-orange-600 hover:text-orange-700 underline">Modifier</button>
                 </div>
               </div>
@@ -425,98 +438,37 @@ const Checkout = () => {
 
               <h2 className="text-xl font-medium">{t('shipping_method')}</h2>
               <div className={`border rounded-lg overflow-hidden ${errors.shippingMethod ? 'border-red-500' : 'border-gray-200'}`}>
-
-                {/* ABIDJAN OPTIONS */}
-                {shippingZone === 'abidjan' && (
-                  <>
-                    <div
-                      className={`flex justify-between items-center p-4 cursor-pointer transition-colors ${shippingMethod === 'standard' ? 'bg-orange-50/50 border-orange-500' : 'hover:bg-gray-50'}`}
-                      onClick={() => {
-                        setShippingMethod('standard');
-                        setErrors(prev => ({ ...prev, shippingMethod: null }));
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${shippingMethod === 'standard' ? 'border-orange-600' : 'border-gray-300'}`}>
-                          {shippingMethod === 'standard' && <div className="w-2 h-2 rounded-full bg-orange-600" />}
+                {shippingRates.methods
+                  ?.filter(m => m.zone === shippingZone && m.enabled)
+                  .map((m, index, arr) => (
+                    <React.Fragment key={m.id}>
+                      <div
+                        className={`flex justify-between items-center p-4 cursor-pointer transition-colors ${shippingMethod === m.id ? 'bg-orange-50/50 border-orange-500' : 'hover:bg-gray-50'}`}
+                        onClick={() => {
+                          setShippingMethod(m.id);
+                          setErrors(prev => ({ ...prev, shippingMethod: null }));
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${shippingMethod === m.id ? 'border-orange-600' : 'border-gray-300'}`}>
+                            {shippingMethod === m.id && <div className="w-2 h-2 rounded-full bg-orange-600" />}
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium block">{m.name}</span>
+                            {m.details && <span className="text-[10px] text-gray-500">{m.details}</span>}
+                          </div>
                         </div>
-                        <span className="text-sm font-medium">{t('standard_shipping')} (2-4 jours)</span>
+                        <span className="text-sm font-medium">{formatPrice(m.price)}</span>
                       </div>
-                      <span className="text-sm font-medium">{formatPrice(shippingRates.standard)}</span>
-                    </div>
-                    <div className="border-t border-gray-200"></div>
-                    <div
-                      className={`flex justify-between items-center p-4 cursor-pointer transition-colors ${shippingMethod === 'express' ? 'bg-orange-50/50 border-orange-500' : 'hover:bg-gray-50'}`}
-                      onClick={() => {
-                        setShippingMethod('express');
-                        setErrors(prev => ({ ...prev, shippingMethod: null }));
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${shippingMethod === 'express' ? 'border-orange-600' : 'border-gray-300'}`}>
-                          {shippingMethod === 'express' && <div className="w-2 h-2 rounded-full bg-orange-600" />}
-                        </div>
-                        <span className="text-sm font-medium">{t('express_shipping')} (24h)</span>
-                      </div>
-                      <span className="text-sm font-medium">{formatPrice(shippingRates.express)}</span>
-                    </div>
-                  </>
-                )}
-
-                {/* NATIONAL */}
-                {shippingZone === 'national' && (
-                  <div
-                    className={`flex justify-between items-center p-4 cursor-pointer bg-orange-50/50 border-orange-500`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full border border-orange-600 flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-orange-600" />
-                      </div>
-                      <span className="text-sm font-medium">Expédition Nationale</span>
-                    </div>
-                    <span className="text-sm font-medium">{shippingRates.national.toLocaleString()} F</span>
+                      {index < arr.length - 1 && <div className="border-t border-gray-100"></div>}
+                    </React.Fragment>
+                  ))
+                }
+                {(!shippingRates.methods || shippingRates.methods.filter(m => m.zone === shippingZone && m.enabled).length === 0) && (
+                  <div className="p-8 text-center text-gray-500 italic text-sm">
+                    Aucune méthode de livraison disponible pour cette zone.
                   </div>
                 )}
-
-                {/* INTERNATIONAL */}
-                {shippingZone === 'international' && (
-                  <>
-                    <div
-                      className={`flex justify-between items-center p-4 cursor-pointer transition-colors ${intlMethod === 'air' ? 'bg-orange-50/50 border-orange-500' : 'hover:bg-gray-50'}`}
-                      onClick={() => {
-                        setIntlMethod('air');
-                        setShippingMethod('international_air');
-                        setErrors(prev => ({ ...prev, shippingMethod: null }));
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${intlMethod === 'air' ? 'border-orange-600' : 'border-gray-300'}`}>
-                          {intlMethod === 'air' && <div className="w-2 h-2 rounded-full bg-orange-600" />}
-                        </div>
-                        <span className="text-sm font-medium">✈️ Par Avion (Rapide)</span>
-                      </div>
-                      <span className="text-sm font-medium">{shippingRates.internationalAir.toLocaleString()} F</span>
-                    </div>
-                    <div className="border-t border-gray-200"></div>
-                    <div
-                      className={`flex justify-between items-center p-4 cursor-pointer transition-colors ${intlMethod === 'sea' ? 'bg-orange-50/50 border-orange-500' : 'hover:bg-gray-50'}`}
-                      onClick={() => {
-                        setIntlMethod('sea');
-                        setShippingMethod('international_sea');
-                        setErrors(prev => ({ ...prev, shippingMethod: null }));
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${intlMethod === 'sea' ? 'border-orange-600' : 'border-gray-300'}`}>
-                          {intlMethod === 'sea' && <div className="w-2 h-2 rounded-full bg-orange-600" />}
-                        </div>
-                        <span className="text-sm font-medium">🚢 Par Bateau (Économique)</span>
-                      </div>
-                      <span className="text-sm font-medium">{shippingRates.internationalSea.toLocaleString()} F</span>
-                    </div>
-                  </>
-                )}
-
               </div>
               {errors.shippingMethod && (
                 <p className="text-red-500 text-xs mt-1 font-medium">{errors.shippingMethod}</p>
@@ -535,7 +487,7 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between items-center border-b border-gray-100 pb-3">
                   <span className="text-gray-500">Expédier à</span>
-                  <span className="text-gray-900 font-medium truncate max-w-[200px]">{formData.address}</span>
+                  <span className="text-gray-900 font-medium truncate max-w-[200px]">{formData.city}</span>
                   <button onClick={() => setStep(1)} className="text-xs font-medium text-orange-600 hover:text-orange-700 underline">Modifier</button>
                 </div>
                 <div className="flex justify-between items-center">
@@ -550,45 +502,40 @@ const Checkout = () => {
 
               <div className={`border rounded-lg overflow-hidden ${errors.paymentMethod ? 'border-red-500' : 'border-gray-200'}`}>
                 <div
-                  className={`flex items-center p-4 cursor-pointer gap-3 ${paymentMethod === 'card' ? 'bg-gray-50' : ''}`}
-                  onClick={() => {
-                    setPaymentMethod('card');
-                    setErrors(prev => ({ ...prev, paymentMethod: null }));
-                  }}
-                >
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'card' ? 'border-black' : 'border-gray-300'}`}>
-                    {paymentMethod === 'card' && <div className="w-2 h-2 rounded-full bg-black" />}
-                  </div>
-                  <span className="text-sm font-medium flex-1">Carte Bancaire (via Jeko)</span>
-                  <CreditCard size={20} className="text-gray-600" />
-                </div>
-                <div
-                  className={`flex items-center p-4 cursor-pointer gap-3 border-t border-gray-200 ${paymentMethod === 'mobile' ? 'bg-gray-50' : ''}`}
+                  className={`flex items-center p-4 cursor-pointer gap-3 border-b border-gray-100 ${paymentMethod === 'mobile' ? 'bg-orange-50/50' : 'hover:bg-gray-50'}`}
                   onClick={() => {
                     setPaymentMethod('mobile');
                     setErrors(prev => ({ ...prev, paymentMethod: null }));
                   }}
                 >
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'mobile' ? 'border-black' : 'border-gray-300'}`}>
-                    {paymentMethod === 'mobile' && <div className="w-2 h-2 rounded-full bg-black" />}
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'mobile' ? 'border-orange-600' : 'border-gray-300'}`}>
+                    {paymentMethod === 'mobile' && <div className="w-2.5 h-2.5 rounded-full bg-orange-600" />}
                   </div>
-                  <span className="text-sm font-medium flex-1">Mobile Money (via Jeko)</span>
-                  <div className="flex gap-1 items-center">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Wave_Logo.svg/1200px-Wave_Logo.svg.png" className="h-4" alt="Wave" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Orange_logo.svg/1200px-Orange_logo.svg.png" className="h-4" alt="Orange" />
+                  <span className="text-sm font-semibold flex-1">Payer par Carte / Mobile (Jeko)</span>
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-200">Wave</span>
+                    <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-200">Orange</span>
+                    <span className="text-xs font-bold text-yellow-600 bg-yellow-50 px-2 py-1 rounded border border-yellow-200">MTN</span>
+                    <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded border border-green-200">Moov</span>
+                    <span className="text-xs font-bold text-white bg-black px-2 py-1 rounded">Djamo</span>
                   </div>
                 </div>
+
                 <div
-                  className={`flex items-center p-4 cursor-pointer gap-3 border-t border-gray-200 ${paymentMethod === 'cod' ? 'bg-gray-50' : ''}`}
+                  className={`flex items-center p-4 cursor-pointer gap-3 ${paymentMethod === 'cod' ? 'bg-orange-50/50' : 'hover:bg-gray-50'}`}
                   onClick={() => {
                     setPaymentMethod('cod');
                     setErrors(prev => ({ ...prev, paymentMethod: null }));
                   }}
                 >
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'cod' ? 'border-black' : 'border-gray-300'}`}>
-                    {paymentMethod === 'cod' && <div className="w-2 h-2 rounded-full bg-black" />}
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'cod' ? 'border-orange-600' : 'border-gray-300'}`}>
+                    {paymentMethod === 'cod' && <div className="w-2.5 h-2.5 rounded-full bg-orange-600" />}
                   </div>
-                  <span className="text-sm font-medium">Paiement à la livraison</span>
+                  <div className="flex-1">
+                    <span className="text-sm font-semibold block">Paiement à la livraison (Cash)</span>
+                    <span className="text-xs text-gray-500">Prévoyez l'appoint pour le coursier</span>
+                  </div>
+                  <Truck size={20} className="text-gray-400" />
                 </div>
               </div>
               {errors.paymentMethod && (

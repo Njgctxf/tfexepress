@@ -23,171 +23,171 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // Date Filter
+        const now = new Date();
+        let startDate = new Date();
+        if (timeRange === 'today') {
+          startDate.setHours(0, 0, 0, 0);
+        } else if (timeRange === 'week') {
+          startDate.setDate(now.getDate() - 7);
+        } else if (timeRange === 'month') {
+          startDate.setDate(now.getDate() - 30);
+        } else if (timeRange === 'year') {
+          startDate.setMonth(now.getMonth() - 11); // Last 12 months including current
+          startDate.setDate(1); // Start from beginning of month for cleaner year view? Or rolling year? Let's do rolling year.
+        }
+        const startDateIso = startDate.toISOString();
+
+        // 1. Counts (Global for Users/Products, Filtered for Orders)
+        const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+        const { count: productCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
+
+        const { count: orderCount } = await supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startDateIso);
+
+        // 2. Recent Orders (Respects Time Filter)
+        const { data: recentOrders, error: orderError } = await supabase
+          .from('orders')
+          .select('id, total, created_at, status, user_email')
+          .gte('created_at', startDateIso) // Filter by date (Today/Week)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (orderError) console.error("Order Fetch Error:", orderError);
+
+        // 3. True Total Revenue (Filtered by time)
+        const { data: allOrders } = await supabase
+          .from('orders')
+          .select('total, status')
+          .gte('created_at', startDateIso);
+
+        const totalRevenue = allOrders
+          ? allOrders
+            .filter(o => o.status !== 'cancelled' && o.status !== 'Annulé')
+            .reduce((acc, order) => acc + (order.total || 0), 0)
+          : 0;
+
+        // 4. Chart Data (Group by Day or Hour)
+        const { data: chartOrders } = await supabase
+          .from('orders')
+          .select('created_at, total')
+          .gte('created_at', startDateIso)
+          .neq('status', 'cancelled')
+          .neq('status', 'Annulé');
+
+        const processChartData = () => {
+          if (timeRange === 'today') {
+            // Group by Hour
+            const hours = {};
+            for (let i = 0; i < 24; i++) hours[i] = 0;
+            chartOrders.forEach(o => {
+              const d = new Date(o.created_at);
+              hours[d.getHours()] += (o.total || 0);
+            });
+            return Object.keys(hours).map(h => ({ name: `${h}h`, value: hours[h] }));
+
+          } else if (timeRange === 'week') {
+            // Group by Day (Last 7 Days)
+            const days = {};
+            const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+            for (let i = 6; i >= 0; i--) {
+              const d = new Date();
+              d.setDate(now.getDate() - i);
+              days[dayNames[d.getDay()]] = 0;
+            }
+            chartOrders.forEach(o => {
+              const d = new Date(o.created_at);
+              days[dayNames[d.getDay()]] += (o.total || 0);
+            });
+            const result = [];
+            for (let i = 6; i >= 0; i--) {
+              const d = new Date();
+              d.setDate(now.getDate() - i);
+              const dayName = dayNames[d.getDay()];
+              result.push({ name: dayName, value: days[dayName] || 0 });
+            }
+            return result;
+
+          } else if (timeRange === 'month') {
+            // Group by Day (Last 30 Days)
+            const stats = {};
+            // Init 30 days
+            for (let i = 29; i >= 0; i--) {
+              const d = new Date();
+              d.setDate(now.getDate() - i);
+              const key = d.getDate() + '/' + (d.getMonth() + 1); // e.g. "22/1"
+              stats[key] = 0;
+            }
+            chartOrders.forEach(o => {
+              const d = new Date(o.created_at);
+              const key = d.getDate() + '/' + (d.getMonth() + 1);
+              if (stats[key] !== undefined) stats[key] += (o.total || 0);
+            });
+            // Return array
+            const result = [];
+            for (let i = 29; i >= 0; i--) {
+              const d = new Date();
+              d.setDate(now.getDate() - i);
+              const key = d.getDate() + '/' + (d.getMonth() + 1);
+              result.push({ name: key, value: stats[key] || 0 });
+            }
+            return result;
+
+          } else if (timeRange === 'year') {
+            // Group by Month (Last 12 Months)
+            const months = {};
+            const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+
+            // Init 12 months
+            for (let i = 11; i >= 0; i--) {
+              const d = new Date();
+              d.setMonth(now.getMonth() - i);
+              const key = monthNames[d.getMonth()];
+              months[key] = 0;
+            }
+
+            chartOrders.forEach(o => {
+              const d = new Date(o.created_at);
+              const key = monthNames[d.getMonth()];
+              if (months[key] !== undefined) months[key] += (o.total || 0);
+            });
+
+            // Return array in correct order
+            const result = [];
+            for (let i = 11; i >= 0; i--) {
+              const d = new Date();
+              d.setMonth(now.getMonth() - i);
+              const key = monthNames[d.getMonth()];
+              result.push({ name: key, value: months[key] || 0 });
+            }
+            return result;
+          }
+        };
+
+        const realChartData = processChartData();
+
+        setStats({
+          totalUsers: userCount || 0,
+          totalProducts: productCount || 0,
+          totalOrders: orderCount || 0,
+          totalRevenue: totalRevenue,
+          recentOrders: recentOrders || [],
+          chartData: realChartData, // Add chart data to state
+          loading: false
+        });
+
+      } catch (error) {
+        console.error("Error fetching dashboard:", error);
+        setStats(prev => ({ ...prev, loading: false }));
+      }
+    };
+
     fetchDashboardData();
   }, [timeRange]);
-
-  const fetchDashboardData = async () => {
-    try {
-      // Date Filter
-      const now = new Date();
-      let startDate = new Date();
-      if (timeRange === 'today') {
-        startDate.setHours(0, 0, 0, 0);
-      } else if (timeRange === 'week') {
-        startDate.setDate(now.getDate() - 7);
-      } else if (timeRange === 'month') {
-        startDate.setDate(now.getDate() - 30);
-      } else if (timeRange === 'year') {
-        startDate.setMonth(now.getMonth() - 11); // Last 12 months including current
-        startDate.setDate(1); // Start from beginning of month for cleaner year view? Or rolling year? Let's do rolling year.
-      }
-      const startDateIso = startDate.toISOString();
-
-      // 1. Counts (Global for Users/Products, Filtered for Orders)
-      const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
-      const { count: productCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
-
-      const { count: orderCount } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', startDateIso);
-
-      // 2. Recent Orders (Respects Time Filter)
-      const { data: recentOrders, error: orderError } = await supabase
-        .from('orders')
-        .select('id, total, created_at, status, user_email')
-        .gte('created_at', startDateIso) // Filter by date (Today/Week)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (orderError) console.error("Order Fetch Error:", orderError);
-
-      // 3. True Total Revenue (Filtered by time)
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('total, status')
-        .gte('created_at', startDateIso);
-
-      const totalRevenue = allOrders
-        ? allOrders
-          .filter(o => o.status !== 'cancelled' && o.status !== 'Annulé')
-          .reduce((acc, order) => acc + (order.total || 0), 0)
-        : 0;
-
-      // 4. Chart Data (Group by Day or Hour)
-      const { data: chartOrders } = await supabase
-        .from('orders')
-        .select('created_at, total')
-        .gte('created_at', startDateIso)
-        .neq('status', 'cancelled')
-        .neq('status', 'Annulé');
-
-      const processChartData = () => {
-        if (timeRange === 'today') {
-          // Group by Hour
-          const hours = {};
-          for (let i = 0; i < 24; i++) hours[i] = 0;
-          chartOrders.forEach(o => {
-            const d = new Date(o.created_at);
-            hours[d.getHours()] += (o.total || 0);
-          });
-          return Object.keys(hours).map(h => ({ name: `${h}h`, value: hours[h] }));
-
-        } else if (timeRange === 'week') {
-          // Group by Day (Last 7 Days)
-          const days = {};
-          const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-          for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(now.getDate() - i);
-            days[dayNames[d.getDay()]] = 0;
-          }
-          chartOrders.forEach(o => {
-            const d = new Date(o.created_at);
-            days[dayNames[d.getDay()]] += (o.total || 0);
-          });
-          const result = [];
-          for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(now.getDate() - i);
-            const dayName = dayNames[d.getDay()];
-            result.push({ name: dayName, value: days[dayName] || 0 });
-          }
-          return result;
-
-        } else if (timeRange === 'month') {
-          // Group by Day (Last 30 Days)
-          const stats = {};
-          // Init 30 days
-          for (let i = 29; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(now.getDate() - i);
-            const key = d.getDate() + '/' + (d.getMonth() + 1); // e.g. "22/1"
-            stats[key] = 0;
-          }
-          chartOrders.forEach(o => {
-            const d = new Date(o.created_at);
-            const key = d.getDate() + '/' + (d.getMonth() + 1);
-            if (stats[key] !== undefined) stats[key] += (o.total || 0);
-          });
-          // Return array
-          const result = [];
-          for (let i = 29; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(now.getDate() - i);
-            const key = d.getDate() + '/' + (d.getMonth() + 1);
-            result.push({ name: key, value: stats[key] || 0 });
-          }
-          return result;
-
-        } else if (timeRange === 'year') {
-          // Group by Month (Last 12 Months)
-          const months = {};
-          const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-
-          // Init 12 months
-          for (let i = 11; i >= 0; i--) {
-            const d = new Date();
-            d.setMonth(now.getMonth() - i);
-            const key = monthNames[d.getMonth()];
-            months[key] = 0;
-          }
-
-          chartOrders.forEach(o => {
-            const d = new Date(o.created_at);
-            const key = monthNames[d.getMonth()];
-            if (months[key] !== undefined) months[key] += (o.total || 0);
-          });
-
-          // Return array in correct order
-          const result = [];
-          for (let i = 11; i >= 0; i--) {
-            const d = new Date();
-            d.setMonth(now.getMonth() - i);
-            const key = monthNames[d.getMonth()];
-            result.push({ name: key, value: months[key] || 0 });
-          }
-          return result;
-        }
-      };
-
-      const realChartData = processChartData();
-
-      setStats({
-        totalUsers: userCount || 0,
-        totalProducts: productCount || 0,
-        totalOrders: orderCount || 0,
-        totalRevenue: totalRevenue,
-        recentOrders: recentOrders || [],
-        chartData: realChartData, // Add chart data to state
-        loading: false
-      });
-
-    } catch (error) {
-      console.error("Error fetching dashboard:", error);
-      setStats(prev => ({ ...prev, loading: false }));
-    }
-  };
 
   const handleOrderClick = (orderId) => {
     navigate(`/admin/orders?highlight=${orderId}`);

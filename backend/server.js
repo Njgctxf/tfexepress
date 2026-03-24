@@ -13,6 +13,7 @@ import profileRoutes from "./routes/profile.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import returnRoutes from "./routes/return.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
+import syncRoutes from "./routes/sync.routes.js";
 
 
 /* ===== ENV ===== */
@@ -29,7 +30,15 @@ const __dirname = path.dirname(__filename);
 /* ===== MIDDLEWARES ===== */
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: (origin, callback) => {
+      // Autoriser le frontend + les requêtes sans origin (apps desktop, Postman, etc.)
+      if (!origin || origin === FRONTEND_URL) {
+        callback(null, true);
+      } else {
+        // Autoriser aussi les requêtes vers /api/sync (vérification API key côté controller)
+        callback(null, true);
+      }
+    },
     credentials: true,
   })
 );
@@ -52,6 +61,7 @@ app.get("/", (req, res) => {
       products: "/api/products",
       orders: "/api/orders",
       stats: "/api/stats",
+      sync: "/api/sync",
     },
   });
 });
@@ -65,6 +75,7 @@ app.use("/api/profiles", profileRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/returns", returnRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/sync", syncRoutes);
 
 
 /* ===== SERVER ===== */

@@ -1,5 +1,5 @@
 import { AlertTriangle, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function ConfirmModal({
     isOpen,
@@ -15,9 +15,15 @@ export default function ConfirmModal({
     const [inputValue, setInputValue] = useState("");
     const isDisabled = verificationText && inputValue !== verificationText;
 
-    useEffect(() => {
-        if (isOpen) setInputValue("");
-    }, [isOpen]);
+    // Reset input when modal opens
+    const [prevOpen, setPrevOpen] = useState(isOpen);
+    if (isOpen && !prevOpen) {
+        setPrevOpen(true);
+        setInputValue("");
+    }
+    if (!isOpen && prevOpen) {
+        setPrevOpen(false);
+    }
 
     if (!isOpen) return null;
 

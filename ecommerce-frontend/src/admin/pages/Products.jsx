@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import { Plus, Pencil, Trash, Search, Filter, AlertCircle, Package, TrendingUp, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Plus, Pencil, Trash, Search, Filter, AlertCircle, Package, TrendingUp, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight, Upload } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import ProductsSalesChart from "../components/ProductsSalesChart";
-import { getProducts, getCategories, deleteProduct } from "../../services/api";
+import { getProducts, getCategories, deleteProduct, bulkCreateProducts } from "../../services/api";
 
 import KpiCard from "../components/KpiCard";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -16,6 +16,8 @@ export default function Products() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   // Filter state: 'all' | 'low_stock' | 'top_sales'
   const [activeFilter, setActiveFilter] = useState("all");
+
+  const fileInputRef = useRef(null);
 
   // Modal State
   const [deleteId, setDeleteId] = useState(null);
@@ -97,6 +99,77 @@ export default function Products() {
     return matchesSearch && matchesCategory && matchesKpi;
   });
 
+  const handleCSVUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target.result;
+      const lines = text.split('\n').filter(l => l.trim().length > 0);
+      
+      if (lines.length < 2) {
+        toast.error("Le fichier CSV est vide ou invalide.");
+        return;
+      }
+
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const productsToInsert = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        // Handle commas inside quotes for typical simple CSVs
+        const currentline = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        if (currentline.length < 2) continue;
+
+        const obj = {};
+        for (let j = 0; j < headers.length; j++) {
+          let val = (currentline[j] || "").trim();
+          if (val.startsWith('"') && val.endsWith('"')) {
+            val = val.substring(1, val.length - 1);
+          }
+          obj[headers[j]] = val;
+        }
+
+        // Mapping CSV columns to DB columns
+        const name = obj.name || obj.nom;
+        if (!name) continue; // Skip lines without a name
+
+        productsToInsert.push({
+          name: name,
+          description: obj.description || "",
+          price: parseFloat(obj.price || obj.prix) || 0,
+          stock: parseInt(obj.stock || obj.quantite, 10) || 0,
+          category_id: obj.category_id || obj.categorie || obj.category || null,
+          images: obj.image || obj.images ? [obj.image || obj.images] : [],
+          brand: obj.brand || obj.marque || null,
+          is_featured: obj.is_featured === 'true' || obj.is_featured === '1'
+        });
+      }
+
+      if (productsToInsert.length === 0) {
+        toast.error("Aucun produit valide trouvé dans le CSV.");
+        return;
+      }
+
+      const toastId = toast.loading("Importation en cours...");
+      try {
+        const res = await bulkCreateProducts(productsToInsert);
+        if (res.success) {
+          toast.success(`${productsToInsert.length} produits importés !`, { id: toastId });
+          fetchData();
+        } else {
+          toast.error("Erreur lors de l'importation: " + res.error, { id: toastId });
+        }
+      } catch (err) {
+        toast.error("Erreur API lors de l'importation.", { id: toastId });
+      }
+      
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsText(file);
+  };
+
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -115,13 +188,23 @@ export default function Products() {
             <h2 className="text-3xl font-black text-gray-900 tracking-tight truncate">Produits</h2>
             <p className="text-gray-500 mt-1 truncate">Gérez votre catalogue et vos stocks</p>
           </div>
-          <Link
-            to="/admin/products/add"
-            className="flex items-center justify-center gap-2 bg-black text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 hover:shadow-xl hover:-translate-y-0.5 w-full sm:w-auto whitespace-nowrap"
-          >
-            <Plus size={20} className="flex-shrink-0" />
-            Nouveau produit
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3">
+             <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleCSVUpload} />
+             <button
+                onClick={() => fileInputRef.current.click()}
+                className="flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-200 px-6 py-3 rounded-2xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm w-full sm:w-auto"
+              >
+                <Upload size={20} className="text-gray-500" />
+                Importer CSV
+              </button>
+            <Link
+              to="/admin/products/add"
+              className="flex items-center justify-center gap-2 bg-black text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 hover:shadow-xl hover:-translate-y-0.5 w-full sm:w-auto whitespace-nowrap"
+            >
+              <Plus size={20} className="flex-shrink-0" />
+              Nouveau produit
+            </Link>
+          </div>
         </div>
 
         {/* KPI CARDS */}

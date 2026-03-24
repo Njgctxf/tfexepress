@@ -1,8 +1,10 @@
 import { useRef, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { getBrands } from "../services/api/brands.api";
+import { useLocalization } from "../context/LocalizationContext";
 
 const PopularBrands = ({ activeBrand, setActiveBrand }) => {
+  const { t } = useLocalization();
   const scrollRef = useRef(null);
   const [paused, setPaused] = useState(false);
   const [brands, setBrands] = useState([]);
@@ -46,9 +48,9 @@ const PopularBrands = ({ activeBrand, setActiveBrand }) => {
   if (brands.length === 0) return null;
 
   return (
-    <section className="max-w-7xl mx-auto px-4 mt-8 md:mt-14">
+    <section className="hidden md:block max-w-7xl mx-auto px-4 mt-8 md:mt-14">
       <h2 className="text-lg font-semibold text-gray-800 mb-6">
-        Marques populaires
+        {t('popular_brands')}
       </h2>
 
       <div className="relative">

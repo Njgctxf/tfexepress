@@ -121,15 +121,17 @@ export function AdminUIProvider({ children }) {
 
   useEffect(() => {
     async function fetchSettings() {
-      const { data, error } = await supabase.from('site_settings').select('*');
+      const { data } = await supabase.from('site_settings').select('*');
       if (data) {
-        const newSettings = { ...siteSettings, loading: false };
-        data.forEach(item => {
-          if (item.key && item.value) {
-            newSettings[item.key] = item.value;
-          }
+        setSiteSettings(prev => {
+          const newSettings = { ...prev, loading: false };
+          data.forEach(item => {
+            if (item.key && item.value) {
+              newSettings[item.key] = item.value;
+            }
+          });
+          return newSettings;
         });
-        setSiteSettings(newSettings);
       } else {
         setSiteSettings(prev => ({ ...prev, loading: false }));
       }

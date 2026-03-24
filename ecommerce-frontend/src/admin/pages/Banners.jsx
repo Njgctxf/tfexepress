@@ -100,7 +100,7 @@ const Banners = () => {
             setBanners(prev => prev.filter(b => b.id !== deleteId));
             toast.success("Bannière supprimée");
             setDeleteId(null);
-        } catch (error) {
+        } catch {
             toast.error("Erreur lors de la suppression");
         }
     };
@@ -111,7 +111,7 @@ const Banners = () => {
             setBanners([]);
             toast.success("Toutes les bannières ont été supprimées.");
             setConfirmAll(false);
-        } catch (error) {
+        } catch {
             toast.error("Erreur lors de la suppression totale");
         }
     };

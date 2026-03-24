@@ -2,8 +2,10 @@ import { useRef, useMemo, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard from "./ProductCard";
 import { getProducts } from "../services/api";
+import { useLocalization } from "../context/LocalizationContext";
 
 const DiscountedGoods = ({ category = "all", brand = null }) => {
+  const { t } = useLocalization();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const scrollRefs = useRef({});
@@ -150,7 +152,7 @@ const DiscountedGoods = ({ category = "all", brand = null }) => {
       {orderedCategories.slice(0, visibleCategoriesCount).map((cat) => (
         <div key={cat} className="mb-10">
           <h2 className="text-lg font-semibold text-gray-700 mb-4">
-            {cat}
+            {cat === 'Telephones' ? t('best_selling_products') : t(cat)}
           </h2>
 
           <div className="relative">

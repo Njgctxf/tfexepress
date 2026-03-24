@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Trash, Ticket, Calendar, Search,
   Percent, Tag, Filter, X, Clock, AlertCircle, Sparkles, Save
@@ -34,7 +35,7 @@ export default function Coupons() {
 
   async function fetchLoyaltySettings() {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("site_settings")
         .select("value")
         .eq("key", "loyalty")

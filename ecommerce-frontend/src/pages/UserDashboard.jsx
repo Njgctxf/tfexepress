@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import MainLayout from "../layout/MainLayout";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -13,7 +13,7 @@ import { Link, useNavigate } from "react-router-dom";
 import ConfirmModal from "../components/ConfirmModal";
 
 export default function UserDashboard() {
-    const { user, loading: authLoading, logout } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("orders");
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -40,7 +40,7 @@ export default function UserDashboard() {
     });
     const [passData, setPassData] = useState({ current: "", new: "", confirm: "" });
     const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState("");
+
 
     // New Address Modal State
     const [showAddressModal, setShowAddressModal] = useState(false);
@@ -57,21 +57,21 @@ export default function UserDashboard() {
         if (user) {
             fetchDashboardData();
         }
-    }, [user, authLoading]);
+    }, [user, authLoading, navigate, fetchDashboardData]);
 
-    async function fetchDashboardData() {
+    const fetchDashboardData = useCallback(async () => {
         try {
             setLoading(true);
 
             // 1. Fetch Profile
             try {
-                const { data: profileData, error } = await supabase
+                const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('email', user.email)
                     .maybeSingle(); // Changed from single() to maybeSingle() to avoid 406 on empty
 
-                if (error) console.error("Profile fetch error:", error);
+                if (profileError) console.error("Profile fetch error:", profileError);
 
                 if (profileData) {
                     setProfile(profileData);
@@ -163,13 +163,13 @@ export default function UserDashboard() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [user]);
 
     // UPDATE PROFILE
     async function handleUpdateProfile(e) {
         e.preventDefault();
         setSaving(true);
-        setMessage("");
+
 
         try {
             const { data, error } = await supabase
@@ -193,14 +193,14 @@ export default function UserDashboard() {
                 icon: "✅"
             });
 
-            setMessage(""); // Clear message as we use toast now
+     // Clear message as we use toast now
             setProfile({ ...profile, ...data });
         } catch (error) {
             console.error(error);
             toast.error(error.message || "Erreur lors de la mise à jour", {
                 position: "top-right"
             });
-            setMessage("");
+    
         } finally {
             setSaving(false);
         }
@@ -209,7 +209,7 @@ export default function UserDashboard() {
     // UPDATE PASSWORD (REAL BACKEND)
     async function handleUpdatePassword(e) {
         e.preventDefault();
-        setMessage(""); // Clear global message if any
+ // Clear global message if any
 
         if (passData.new !== passData.confirm) {
             toast.error("Les mots de passe ne correspondent pas");
@@ -279,7 +279,7 @@ export default function UserDashboard() {
             await supabase.from("user_addresses").delete().eq("id", id);
             setAddresses(addresses.filter(a => a.id !== id));
             toast.success("Adresse supprimée");
-        } catch (error) {
+        } catch {
             toast.error("Erreur suppression adresse");
         }
     }
@@ -304,9 +304,7 @@ export default function UserDashboard() {
         }
     }
 
-    async function handleDeleteAddress(id) {
-        setPendingAction({ type: 'deleteAddress', payload: id });
-    }
+
 
     // REMOVE FAVORITE
     async function removeFavorite(favId) {
@@ -330,7 +328,7 @@ export default function UserDashboard() {
 
         // Calculate Subtotals
         const subtotal = order.items?.reduce((acc, item) => acc + (item.price * item.quantity), 0) || 0;
-        const shipping = 0; // Free shipping logic for now
+
 
         return (
             <div className="fixed inset-0 z-[100] flex justify-end bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-300 print:bg-white print:static print:block" onClick={onClose}>
@@ -403,8 +401,8 @@ export default function UserDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody className="text-sm">
-                                    {order.items?.map((item, idx) => (
-                                        <tr key={idx} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 print:hover:bg-transparent">
+                                    {order.items?.map((item) => (
+                                        <tr key={item.id || Math.random()} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 print:hover:bg-transparent">
                                             <td className="py-4 pr-4">
                                                 <div className="flex items-center gap-4">
                                                     {/* Hide image on print generally better, or keep small */}
@@ -469,15 +467,7 @@ export default function UserDashboard() {
         );
     };
 
-    const getStatusStep = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'en attente': return 1;
-            case 'en cours': return 1;
-            case 'expédié': return 2;
-            case 'livré': return 3;
-            default: return 0;
-        }
-    };
+
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -502,7 +492,7 @@ export default function UserDashboard() {
     if (!user) return null;
 
     // --- UI HELPERS ---
-    const TabButton = ({ id, label, icon: Icon, active, mobile }) => (
+    const TabButton = ({ id, label, icon: TabIcon, active, mobile }) => (
         <button
             onClick={() => setActiveTab(id)}
             className={`
@@ -513,7 +503,7 @@ export default function UserDashboard() {
                 }
             `}
         >
-            <Icon size={20} className={`transition-colors duration-300 ${active ? "text-yellow-400" : "text-gray-400 group-hover:text-yellow-500"}`} />
+            {TabIcon && <TabIcon size={20} className={`transition-colors duration-300 ${active ? "text-yellow-400" : "text-gray-400 group-hover:text-yellow-500"}`} />}
             <span className={mobile ? "" : "flex-1 text-left"}>{label}</span>
             {active && !mobile && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-yellow-400 rounded-r-full" />}
         </button>
@@ -680,7 +670,7 @@ export default function UserDashboard() {
                                                             o.id.toString().includes(searchTerm) ||
                                                             o.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                                             o.total.toString().includes(searchTerm)
-                                                        ).map((order, idx) => (
+                                                        ).map((order) => (
                                                             <div key={order.id} className="p-5 flex flex-col sm:flex-row items-center gap-6 hover:bg-gray-50/50 transition-colors group">
 
                                                                 {/* 1. ID & Status */}
