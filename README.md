@@ -2,7 +2,7 @@
 
 Une plateforme e-commerce moderne avec interface React et backend Node.js/Express.
 
-## 📋 Description
+## Description
 
 Ce projet est une plateforme e-commerce complète comprenant :
 
@@ -15,7 +15,7 @@ Ce projet est une plateforme e-commerce complète comprenant :
 - Dashboard administrateur et client
 - Support de messagerie
 
-## 🚀 Technologies Utilisées
+## Technologies Utilisées
 
 ### Frontend
 
@@ -32,11 +32,11 @@ Ce projet est une plateforme e-commerce complète comprenant :
 - supabase
 - JWT pour l'authentification
 
-## 📦 Installation
+## Installation
 
 ### Prérequis
 
-- Node.js (version 16 ou supérieure)
+- Node.js
 - npm ou yarn
 
 ### Installation du Frontend
@@ -53,7 +53,7 @@ cd backend
 npm install
 ```
 
-## 🔧 Configuration
+## Configuration
 
 1. Créez un fichier `.env` dans le dossier `backend` avec les variables suivantes :
 
@@ -64,7 +64,7 @@ supabase =votre_uri_supabase
 
 2. Créez un fichier `.env` dans le dossier `ecommerce-frontend` si nécessaire.
 
-## 🏃 Lancement de l'Application
+## Lancement de l'Application
 
 ### Démarrer le Backend
 
@@ -84,26 +84,28 @@ npm run dev
 
 L'application frontend démarrera sur `http://localhost:5173`
 
-## 📝 Fonctionnalités
+## Fonctionnalités
 
-- ✅ Authentification utilisateur (inscription/connexion)
-- ✅ Navigation de produits avec filtres
-- ✅ Panier d'achat dynamique
-- ✅ Système de paiement
-- ✅ Dashboard client
-- ✅ Dashboard administrateur
-- ✅ Gestion des commandes
-- ✅ Support client
-- ✅ Upload d'images de produits
+-  Authentification utilisateur (inscription/connexion)
+- Navigation de produits avec filtres
+-  Panier d'achat dynamique
+-  Système de paiement
+-  Dashboard client
+- Dashboard administrateur
+-  Gestion des commandes
+-  Support client
+-  Upload d'images de produits
 
-## 🤝 Contribution
+## Contribution
 
 Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou soumettre une pull request.
 
-## 📄 Licence
+##  Licence
 
 Ce projet est sous licence MIT.
 
-## 👨‍💻 Auteur
+## Auteur
 
-Développé avec ❤️ par [Votre Nom]
+Développé avec  par KACOU Victoire
+
+
