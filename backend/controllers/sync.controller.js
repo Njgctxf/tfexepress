@@ -113,12 +113,21 @@ export async function syncAliexpressProducts(req, res) {
 
           if (existing) {
             // Mettre à jour le produit existant
-            const imageUrl = product.imageUrl || product.image_url || product.image || (product.images && product.images[0]);
+            let imageList = [];
+            const potentialGallery = product.images || product.gallery || product.product_images || product.additional_images;
+
+            if (Array.isArray(potentialGallery) && potentialGallery.length > 0) {
+              imageList = potentialGallery;
+            } else {
+              const singleImage = product.imageUrl || product.image_url || product.image || product.thumbnail;
+              if (singleImage) imageList = [singleImage];
+            }
+
             const updates = {
               name: product.title,
               price: Number(product.price),
               ...(categoryId && { category_id: categoryId }),
-              ...(imageUrl && { images: [imageUrl] }),
+              ...(imageList.length > 0 && { images: imageList }),
             };
 
             await supabase
@@ -133,14 +142,23 @@ export async function syncAliexpressProducts(req, res) {
         }
 
         // Préparer le payload d'insertion
-        const imageUrl = product.imageUrl || product.image_url || product.image || (product.images && product.images[0]);
+        let imageList = [];
+        // On cherche dans tous les champs possibles pour une galerie ou des images multiples
+        const potentialGallery = product.images || product.gallery || product.product_images || product.additional_images;
+        
+        if (Array.isArray(potentialGallery) && potentialGallery.length > 0) {
+          imageList = potentialGallery;
+        } else {
+          const singleImage = product.imageUrl || product.image_url || product.image || product.thumbnail;
+          if (singleImage) imageList = [singleImage];
+        }
         
         const payload = {
           name: product.title,
           price: Number(product.price),
           stock: 100, // Stock par défaut
           description: product.originalTitle || product.title,
-          images: imageUrl ? [imageUrl] : [],
+          images: imageList,
           category_id: categoryId,
           aliexpress_id: product.id ? String(product.id) : null,
           aliexpress_url: product.productUrl || null,
