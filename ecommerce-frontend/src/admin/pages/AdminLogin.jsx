@@ -108,7 +108,7 @@ export default function AdminLogin() {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         className="block w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent text-gray-900 font-medium rounded-2xl focus:bg-white focus:border-black focus:ring-0 transition-all placeholder:text-gray-400 sm:text-sm"
-                                        placeholder="admin@tfexpress.com"
+                                        placeholder="riootagameur@gmail.com"
                                     />
                                 </div>
                             </div>
