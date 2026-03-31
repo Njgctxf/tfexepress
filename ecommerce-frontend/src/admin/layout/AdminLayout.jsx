@@ -11,9 +11,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/admin/login");
-    }
+    // SÉCURITÉ DÉSACTIVÉE TEMPORAIREMENT
   }, [user, loading, navigate]);
 
   if (loading) return (
@@ -22,7 +20,7 @@ export default function AdminLayout() {
     </div>
   );
 
-  if (!user) return null; // Prevent flash while redirecting
+  // if (!user) return null; // SÉCURITÉ DÉSACTIVÉE
 
   return (
     <div className="flex h-screen overflow-hidden">

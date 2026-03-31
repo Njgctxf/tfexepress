@@ -18,10 +18,11 @@ export default function Products() {
   // Filter state: 'all' | 'low_stock' | 'top_sales'
   const [activeFilter, setActiveFilter] = useState("all");
 
-  const fileInputRef = useRef(null);
-
+  // Selection State
+  const [selectedIds, setSelectedIds] = useState([]);
+  
   // Modal State
-  const [deleteId, setDeleteId] = useState(null);
+  const [deleteEntity, setDeleteEntity] = useState(null); // id (string) or array of ids
 
   useEffect(() => {
     fetchData();
@@ -49,13 +50,25 @@ export default function Products() {
   }
 
   const confirmDelete = async () => {
-    if (!deleteId) return;
+    if (!deleteEntity) return;
+    
+    const idsToDelete = Array.isArray(deleteEntity) ? deleteEntity : [deleteEntity];
+    const isBulk = Array.isArray(deleteEntity);
+
     try {
-      await deleteProduct(deleteId);
+      if (isBulk) {
+        const { bulkDeleteProducts: apiBulkDelete } = await import("../../services/api");
+        await apiBulkDelete(idsToDelete);
+      } else {
+        await deleteProduct(idsToDelete[0]);
+      }
+      
       // Optimistic UI update
-      setProducts(prev => prev.filter(p => (p.id !== deleteId && p._id !== deleteId)));
-      setDeleteId(null);
-      toast.success("Produit supprimé avec succès");
+      setProducts(prev => prev.filter(p => !idsToDelete.includes(p._id || p.id)));
+      
+      if (isBulk) setSelectedIds([]);
+      setDeleteEntity(null);
+      toast.success(isBulk ? `${idsToDelete.length} produits supprimés` : "Produit supprimé avec succès");
     } catch (error) {
       console.error(error);
       toast.error("Erreur lors de la suppression : " + error.message);
@@ -78,7 +91,8 @@ export default function Products() {
   };
 
   // derived state
-  const lowStockCount = products.filter((p) => p.stock <= 5).length;
+  const outOfStockCount = products.filter((p) => p.stock === 0).length;
+  const lowStockCount = products.filter((p) => p.stock > 0 && p.stock <= 5).length;
   const topSalesCount = products.filter(p => p.sold > 0).length;
 
   const filteredProducts = products.filter(product => {
@@ -91,8 +105,10 @@ export default function Products() {
 
     // KPI Filter Logic
     let matchesKpi = true;
-    if (activeFilter === "low_stock") {
-      matchesKpi = product.stock <= 5;
+    if (activeFilter === "out_of_stock") {
+      matchesKpi = product.stock === 0;
+    } else if (activeFilter === "low_stock") {
+      matchesKpi = product.stock > 0 && product.stock <= 5;
     } else if (activeFilter === "top_sales") {
       matchesKpi = product.sold > 0;
     }
@@ -219,7 +235,7 @@ export default function Products() {
         </div>
 
         {/* KPI CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <KpiCard
             title="Total Produits"
             value={products.length}
@@ -230,11 +246,20 @@ export default function Products() {
             onClick={() => setActiveFilter("all")}
           />
           <KpiCard
+            title="Rupture Stock"
+            value={outOfStockCount}
+            icon={<AlertCircle size={24} className="text-white" />}
+            gradient="from-red-600 to-rose-500"
+            trend={activeFilter === "out_of_stock" ? "Filtre actif" : "Stock = 0"}
+            trendUp={false}
+            onClick={() => setActiveFilter(prev => prev === "out_of_stock" ? "all" : "out_of_stock")}
+          />
+          <KpiCard
             title="Stock Faible"
             value={lowStockCount}
             icon={<AlertCircle size={24} className="text-white" />}
             gradient="from-amber-500 to-orange-400"
-            trend={activeFilter === "low_stock" ? "Filtre actif (Cliquez pour retirer)" : "Cliquez pour filtrer"}
+            trend={activeFilter === "low_stock" ? "Filtre actif" : "1 à 5 articles"}
             trendUp={false}
             onClick={() => setActiveFilter(prev => prev === "low_stock" ? "all" : "low_stock")}
           />
@@ -243,7 +268,7 @@ export default function Products() {
             value={topSalesCount}
             icon={<TrendingUp size={24} className="text-white" />}
             gradient="from-emerald-500 to-teal-400"
-            trend={activeFilter === "top_sales" ? "Filtre actif (Cliquez pour retirer)" : "Cliquez pour filtrer les best-sellers"}
+            trend={activeFilter === "top_sales" ? "Filtre actif" : "Best-sellers"}
             trendUp={true}
             onClick={() => setActiveFilter(prev => prev === "top_sales" ? "all" : "top_sales")}
           />
@@ -290,6 +315,36 @@ export default function Products() {
         </div>
       </div>
 
+      {/* ⚡ BULK ACTIONS BAR */}
+      {selectedIds.length > 0 && (
+        <div className="bg-indigo-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between animate-in slide-in-from-top duration-300">
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 p-2 rounded-xl">
+              <Package size={20} />
+            </div>
+            <div>
+              <p className="font-bold">{selectedIds.length} produits sélectionnés</p>
+              <p className="text-xs text-indigo-100">Actions groupées disponibles</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setSelectedIds([])}
+              className="px-4 py-2 hover:bg-white/10 rounded-xl text-sm font-medium transition-colors"
+            >
+              Annuler
+            </button>
+            <button 
+              onClick={() => setDeleteEntity(selectedIds)}
+              className="flex items-center gap-2 bg-white text-indigo-600 px-6 py-2 rounded-xl text-sm font-bold hover:bg-indigo-50 transition-all shadow-sm"
+            >
+              <Trash size={18} />
+              Supprimer la sélection
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 📦 TABLE */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
@@ -298,6 +353,20 @@ export default function Products() {
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50/50 text-gray-500 font-medium border-b border-gray-100 uppercase text-xs tracking-wider">
               <tr>
+                <th className="px-6 py-4">
+                  <input 
+                    type="checkbox"
+                    className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    checked={selectedIds.length === filteredProducts.length && filteredProducts.length > 0}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedIds(filteredProducts.map(p => p._id || p.id));
+                      } else {
+                        setSelectedIds([]);
+                      }
+                    }}
+                  />
+                </th>
                 <th className="px-6 py-4">Produit</th>
                 <th className="px-6 py-4">Catégorie</th>
                 <th className="px-6 py-4">Prix</th>
@@ -309,7 +378,7 @@ export default function Products() {
             <tbody className="divide-y divide-gray-100 text-gray-600">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center">
+                  <td colSpan="6" className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-400">
                       <Package size={48} strokeWidth={1} className="mb-4 text-gray-300" />
                       <p className="text-lg font-medium text-gray-900">Aucun produit trouvé</p>
@@ -320,8 +389,23 @@ export default function Products() {
               ) : (
                 filteredProducts.map((p) => {
                   const stock = getStockStatus(p.stock);
+                  const isSelected = selectedIds.includes(p._id || p.id);
                   return (
-                    <tr key={p._id || p.id} className="group hover:bg-gray-50/80 transition-colors">
+                    <tr key={p._id || p.id} className={`group hover:bg-gray-50/80 transition-colors ${isSelected ? 'bg-indigo-50/30' : ''}`}>
+                      <td className="px-6 py-4">
+                        <input 
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedIds([...selectedIds, p._id || p.id]);
+                            } else {
+                              setSelectedIds(selectedIds.filter(id => id !== (p._id || p.id)));
+                            }
+                          }}
+                        />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
                           <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100 shadow-sm relative group-hover:scale-105 transition-transform duration-300">
@@ -377,7 +461,7 @@ export default function Products() {
                           <button
                             className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-all"
                             title="Supprimer"
-                            onClick={() => setDeleteId(p._id || p.id)}
+                            onClick={() => setDeleteEntity(p._id || p.id)}
                           >
                             <Trash size={18} />
                           </button>
@@ -444,7 +528,7 @@ export default function Products() {
                         </Link>
                         <button
                           className="p-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"
-                          onClick={() => setDeleteId(p._id || p.id)}
+                          onClick={() => setDeleteEntity(p._id || p.id)}
                         >
                           <Trash size={16} />
                         </button>
@@ -460,11 +544,13 @@ export default function Products() {
       </div>
 
       <ConfirmModal
-        isOpen={!!deleteId}
-        onClose={() => setDeleteId(null)}
+        isOpen={!!deleteEntity}
+        onClose={() => setDeleteEntity(null)}
         onConfirm={confirmDelete}
-        title="Supprimer le produit ?"
-        message="Cette action est irréversible. Le produit sera retiré de la vente immédiatement."
+        title={Array.isArray(deleteEntity) ? `Supprimer ${deleteEntity.length} produits ?` : "Supprimer le produit ?"}
+        message={Array.isArray(deleteEntity) 
+          ? `Êtes-vous sûr de vouloir supprimer ces ${deleteEntity.length} produits ? Cette action est irréversible.`
+          : "Cette action est irréversible. Le produit sera retiré de la vente immédiatement."}
         confirmText="Supprimer"
         isDestructive={true}
       />

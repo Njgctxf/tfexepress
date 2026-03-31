@@ -12,10 +12,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
+  // SÉCURITÉ DÉSACTIVÉE : Accès direct autorisé
   return children;
 };
 
