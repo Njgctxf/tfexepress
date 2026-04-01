@@ -35,9 +35,15 @@ const resizeImage = (file) => new Promise((resolve) => {
 export async function getProducts(filters = {}) {
   try {
     let selectQuery = filters.select || `*, category:categories(id, name)`;
+    // Initial Query
     let query = supabase.from('products').select(selectQuery);
 
-    // Pagination
+    // Filter by status (Draft/Published)
+    // Default: Show only published products for visitors
+    // For Admin: includeDrafts must be true
+    if (!filters.includeDrafts) {
+      query = query.eq('status', 'publié');
+    }
     if (filters.page && filters.limit) {
       const from = (filters.page - 1) * filters.limit;
       const to = from + filters.limit - 1;
@@ -120,17 +126,37 @@ export async function getProducts(filters = {}) {
  */
 export async function getProductById(id) {
   try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*, category:categories(id, name)')
-      .eq('id', id) // Assumes numeric ID or UUID
-      .single();
+    const isNumeric = !isNaN(id) && !isNaN(parseFloat(id));
+    let query = supabase.from('products').select('*, category:categories(id, name)');
+
+    if (isNumeric) {
+      // Try primary key bigint first
+      query = query.eq('id', Number(id));
+    } else {
+      // If it looks like a string ID/UUID, try other potential ID columns
+      // We check for _id (if defined) or aliexpress_id (since we know it exists)
+      query = query.or(`aliexpress_id.eq.${id},id.eq.${Number(0)}`); // Dummy ID to keep it a valid query if no match
+    }
+
+    const { data, error } = await query.maybeSingle();
+
+    // Secondary fallback: if nothing found by numeric ID, try _id field if it exists in the row
+    if (!data && isNumeric) {
+      const { data: fallbackData } = await supabase
+        .from('products')
+        .select('*, category:categories(id, name)')
+        .eq('aliexpress_id', String(id))
+        .maybeSingle();
+      if (fallbackData) return { success: true, data: fallbackData };
+    }
 
     if (error) throw error;
+    if (!data) return { success: false, error: "Produit non trouvé" };
+    
     return { success: true, data };
   } catch (error) {
-    console.error("API Error", error);
-    return { success: false, data: null };
+    console.error("API Error (getProductById):", error);
+    return { success: false, error: error.message };
   }
 }
 
@@ -221,6 +247,17 @@ export async function createProduct(productData) {
  */
 export async function updateProduct(id, updates) {
   try {
+    // 0. Resolve the actual numeric ID if the provided one is a string
+    let numericId = id;
+    if (isNaN(id)) {
+      const { data: resolved } = await supabase
+        .from('products')
+        .select('id')
+        .eq('aliexpress_id', String(id))
+        .maybeSingle();
+      if (resolved) numericId = resolved.id;
+    }
+
     // 1. Process Images
     const processedImages = [];
     if (Array.isArray(updates.images)) {
@@ -250,6 +287,8 @@ export async function updateProduct(id, updates) {
     if (updates.stock) payload.stock = Number(updates.stock);
     if (updates.brand) payload.brand = updates.brand;
     if (updates.is_featured !== undefined) payload.is_featured = updates.is_featured;
+    if (updates.status) payload.status = updates.status; 
+    
     if (updates.sizes) {
       payload.sizes = typeof updates.sizes === 'string' ? updates.sizes.split(',').map(s => s.trim()).filter(Boolean) : updates.sizes;
     }
@@ -259,9 +298,7 @@ export async function updateProduct(id, updates) {
       payload.category_id = typeof updates.category === 'object' ? updates.category.id : updates.category;
     }
 
-    // Update images logic:
-    // If we have processed images, replace key. 
-    // If user sent empty array explicitly, clear it.
+    // Update images logic
     if (processedImages.length > 0) {
       payload.images = processedImages;
     } else if (updates.images && updates.images.length === 0) {
@@ -271,7 +308,7 @@ export async function updateProduct(id, updates) {
     const { data, error } = await supabase
       .from('products')
       .update(payload)
-      .eq('id', id)
+      .eq('id', numericId)
       .select()
       .single();
 
@@ -299,6 +336,18 @@ export async function bulkDeleteProducts(ids) {
   const { error } = await supabase
     .from('products')
     .delete()
+    .in('id', ids);
+
+  if (error) throw error;
+  return { success: true };
+}
+
+export async function bulkUpdateProductsStatus(ids, status) {
+  if (!Array.isArray(ids) || ids.length === 0) return { success: true };
+
+  const { error } = await supabase
+    .from('products')
+    .update({ status })
     .in('id', ids);
 
   if (error) throw error;

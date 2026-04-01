@@ -25,6 +25,7 @@ export default function EditProduct() {
   useEffect(() => {
     async function fetchProduct() {
       try {
+        console.log("Fetching product with ID:", id);
         const res = await getProductById(id);
         if (res.success && res.data) {
           const p = res.data;
@@ -34,15 +35,18 @@ export default function EditProduct() {
             stock: p.stock,
             category: typeof p.category === 'object' ? (p.category.id || p.category._id) : p.category,
             description: p.description || "",
+            status: p.status || "publié",
             // Handle legacy single image or new images array
             images: p.images && p.images.length > 0 ? p.images : (p.image ? [p.image] : []),
             sizes: Array.isArray(p.sizes) ? p.sizes.join(', ') : "",
             brand: p.brand || "",
           });
+        } else {
+          throw new Error("Produit introuvable dans la base de données");
         }
       } catch (error) {
         console.error("Error fetching product:", error);
-        toast.error("Impossible de charger le produit");
+        toast.error("Impossible de charger le produit: " + error.message);
         navigate("/admin/products");
       } finally {
         setLoading(false);
@@ -199,6 +203,21 @@ export default function EditProduct() {
 
           <Card title="Organisation">
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Tag size={16} className="text-gray-400" />
+                  Statut de visibilité
+                </label>
+                <select
+                  value={form.status || 'publié'}
+                  onChange={(e) => setForm(prev => ({ ...prev, status: e.target.value }))}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-black transition-all outline-none"
+                >
+                  <option value="publié">Publié (En ligne)</option>
+                  <option value="brouillon">Brouillon (Caché)</option>
+                </select>
+              </div>
+              
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                   <Tag size={16} className="text-gray-400" />

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Plus, Pencil, Trash, Search, Filter, AlertCircle, Package, TrendingUp, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight, Upload } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import ProductsSalesChart from "../components/ProductsSalesChart";
-import { getProducts, getCategories, deleteProduct, bulkCreateProducts } from "../../services/api";
+import { getProducts, getCategories, deleteProduct, bulkCreateProducts, bulkDeleteProducts, bulkUpdateProductsStatus } from "../../services/api";
 import { getProxiedImageUrl } from "../../utils/imageProxy";
 
 import KpiCard from "../components/KpiCard";
@@ -17,6 +17,8 @@ export default function Products() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   // Filter state: 'all' | 'low_stock' | 'top_sales'
   const [activeFilter, setActiveFilter] = useState("all");
+
+  const fileInputRef = useRef(null);
 
   // Selection State
   const [selectedIds, setSelectedIds] = useState([]);
@@ -34,7 +36,11 @@ export default function Products() {
       // Run independent queries in parallel to reduce load time
       const [categoriesRes, productsRes] = await Promise.all([
         getCategories(),
-        getProducts({ search: search, category: categoryFilter !== 'all' ? categoryFilter : null })
+        getProducts({ 
+          search: search, 
+          category: categoryFilter !== 'all' ? categoryFilter : null,
+          includeDrafts: true 
+        })
       ]);
 
       setCategories(categoriesRes || []);
@@ -49,6 +55,21 @@ export default function Products() {
     }
   }
 
+  const handleBulkStatusChange = async (status) => {
+    try {
+      await bulkUpdateProductsStatus(selectedIds, status);
+      // Optimistic UI update
+      setProducts(prev => prev.map(p => 
+        selectedIds.includes(p._id || p.id) ? { ...p, status } : p
+      ));
+      setSelectedIds([]);
+      toast.success(`${selectedIds.length} produits mis en ${status}`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Erreur lors du changement de statut");
+    }
+  };
+
   const confirmDelete = async () => {
     if (!deleteEntity) return;
     
@@ -57,8 +78,7 @@ export default function Products() {
 
     try {
       if (isBulk) {
-        const { bulkDeleteProducts: apiBulkDelete } = await import("../../services/api");
-        await apiBulkDelete(idsToDelete);
+        await bulkDeleteProducts(idsToDelete);
       } else {
         await deleteProduct(idsToDelete[0]);
       }
@@ -329,6 +349,18 @@ export default function Products() {
           </div>
           <div className="flex items-center gap-3">
             <button 
+              onClick={() => handleBulkStatusChange('brouillon')}
+              className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 rounded-xl text-sm font-bold transition-all border border-indigo-400"
+            >
+              Passer en Brouillon
+            </button>
+            <button 
+              onClick={() => handleBulkStatusChange('publié')}
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 rounded-xl text-sm font-bold transition-all border border-emerald-400"
+            >
+              Publier
+            </button>
+            <button 
               onClick={() => setSelectedIds([])}
               className="px-4 py-2 hover:bg-white/10 rounded-xl text-sm font-medium transition-colors"
             >
@@ -339,7 +371,7 @@ export default function Products() {
               className="flex items-center gap-2 bg-white text-indigo-600 px-6 py-2 rounded-xl text-sm font-bold hover:bg-indigo-50 transition-all shadow-sm"
             >
               <Trash size={18} />
-              Supprimer la sélection
+              Supprimer
             </button>
           </div>
         </div>
@@ -369,6 +401,7 @@ export default function Products() {
                 </th>
                 <th className="px-6 py-4">Produit</th>
                 <th className="px-6 py-4">Catégorie</th>
+                <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Prix</th>
                 <th className="px-6 py-4">Stock & Ventes</th>
                 <th className="px-6 py-4 text-center">Actions</th>
@@ -431,6 +464,12 @@ export default function Products() {
                       <td className="px-6 py-4">
                         <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
                           {getCategoryName(p.category)}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold border ${p.status === 'brouillon' ? 'bg-gray-100 text-gray-500 border-gray-200' : 'bg-green-100 text-green-700 border-green-200'}`}>
+                          {p.status === 'brouillon' ? 'Brouillon' : 'Publié'}
                         </span>
                       </td>
 

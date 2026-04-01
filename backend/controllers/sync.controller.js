@@ -27,7 +27,25 @@ export async function syncAliexpressProducts(req, res) {
       });
     }
 
-    // 2. Valider le payload
+    // 2. Gérer les actions spécifiques (ex: get_categories pour le scrapper)
+    const { action } = req.body;
+    
+    if (action === "get_categories") {
+      const { data: categories, error } = await supabase
+        .from("categories")
+        .select("id, name")
+        .order('name');
+      
+      if (error) throw error;
+      
+      return res.status(200).json({
+        success: true,
+        action: "get_categories",
+        categories: categories || []
+      });
+    }
+
+    // 3. Valider le payload pour l'import de produits
     const { products, timestamp, source } = req.body;
 
     if (!products || !Array.isArray(products) || products.length === 0) {
